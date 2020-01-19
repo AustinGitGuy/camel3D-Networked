@@ -12,6 +12,13 @@ enum GameMessages{
 	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1
 };
 
+#pragma pack(push, 1)
+struct MsgStruct
+{
+	unsigned char id;
+};
+#pragma pack(pop)
+
 int main(void){
 	unsigned int maxClients = 10;
 	unsigned short serverPort = 60000;
@@ -42,7 +49,7 @@ int main(void){
 	else {
 		printf("Enter server IP or hit enter for 127.0.0.1\n");
 		fgets(str, 512, stdin);
-		if(str[0] == '/n'){
+		if(str[0] == '\n'){
 			strcpy(str, "127.0.0.1");
 		}
 		printf("Starting the client.\n");
@@ -67,10 +74,11 @@ int main(void){
 
 				// Use a BitStream to write a custom user message
 				// Bitstreams are easier to use than sending casted structures, and handle endian swapping automatically
-				RakNet::BitStream bsOut;
-				bsOut.Write((RakNet::MessageID)ID_GAME_MESSAGE_1);
-				bsOut.Write("Hello world");
-				peer->Send(&bsOut, HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				
+				MsgStruct send;
+				send.id = (RakNet::MessageID)ID_GAME_MESSAGE_1;
+
+				peer->Send((char*)&send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 				break;
 			}
 			case ID_NEW_INCOMING_CONNECTION:
@@ -95,14 +103,16 @@ int main(void){
 					printf("Connection lost.\n");
 				}
 				break;
-				case ID_GAME_MESSAGE_1: {
-					RakNet::RakString rs;
-					RakNet::BitStream bsIn(packet->data,packet->length,false);
-					bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-					bsIn.Read(rs);
-					printf("%s\n", rs.C_String());
-				}
+			case ID_GAME_MESSAGE_1: {
+				MsgStruct* read = (MsgStruct*)packet->data;
+
+				assert(packet->length == sizeof(MsgStruct));
+				if(packet->length != sizeof(MsgStruct))
+					return -1;
+
+				printf("Message recieved with key %i\n", read->id);
 				break;
+			}
 			default:
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
 				break;
