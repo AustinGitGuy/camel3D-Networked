@@ -20,8 +20,10 @@ struct MsgStruct {
 };
 #pragma pack(pop)
 
-struct AddressStruct {
-	RakNet::SystemAddress address[10];
+struct UserProfile {
+	RakNet::SystemAddress address;
+	char* name;
+	bool isHost;
 };
 
 void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int maxClients, unsigned int serverPort){
