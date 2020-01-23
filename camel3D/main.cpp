@@ -10,13 +10,13 @@
 #include "Raknet/RakNetTypes.h"
 
 enum GameMessages{
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1,ID_NAME
 };
 
 #pragma pack(push, 1)
 struct MsgStruct {
 	unsigned char id;
-	unsigned char msg[127];
+	 char msg[127];
 };
 #pragma pack(pop)
 
@@ -26,10 +26,9 @@ struct UserProfile {
 	bool isHost;
 };
 
-void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int maxClients, unsigned int serverPort){
+void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int maxClients, unsigned int serverPort, RakNet::Packet* packet){
 	char msg[127];
-	RakNet::Packet* packet;
-
+	
 	bool running = true;
 
 	while(running){
@@ -85,6 +84,7 @@ void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int m
 
 				//Message recieved
 				printf("Message recieved with key %i\n", read->id);
+				printf("Message contains: %s\n", read->msg);
 				break;
 			}
 			default:
@@ -135,7 +135,7 @@ int main(void){
 
 	bool running = true;
 
-	std::thread handlePackets(PacketHandler, peer, isServer, maxClients, serverPort);
+	std::thread handlePackets(PacketHandler, peer, isServer, maxClients, serverPort, packet);
 
 	while(running){
 		fgets(str, 127, stdin);
@@ -144,6 +144,8 @@ int main(void){
 			if(str[0] != '/'){
 				MsgStruct send;
 				send.id = (RakNet::MessageID)ID_GAME_MESSAGE_1;
+				strcpy(send.msg, str);
+				peer->Send((char*)&send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 
 				//Cast to a char* to send the struct as a packet
 			}
@@ -152,7 +154,9 @@ int main(void){
 
 			}
 		}
+
 	}
+
 
 	RakNet::RakPeerInterface::DestroyInstance(peer);
 
