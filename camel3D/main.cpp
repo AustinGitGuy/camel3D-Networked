@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <thread>
+#include <iostream>
 
 #include "RakNet/RakPeerInterface.h"
 #include "RakNet/MessageIdentifiers.h"
@@ -24,7 +25,7 @@ struct MsgStruct {
 
 #pragma pack(push, 1)
 struct UserProfile {
-	RakNet::SystemAddress address;
+	char ip[127];
 	char name[127];
 	bool isHost;
 };
@@ -38,11 +39,15 @@ struct ProfileList {
 void SendToClient(RakNet::RakPeerInterface* peer, ProfileList* clientProfiles, MsgStruct msg, int client = -1){
 	if(client == -1){
 		for(int i = 0; i < clientProfiles->iter; i++){
-			peer->Send((char*)&msg, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, clientProfiles[i].profiles->address, false);
+			RakNet::SystemAddress tmp;
+			tmp.FromString(clientProfiles[i].profiles->ip);
+			peer->Send((char*)&msg, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, tmp, false);
 		}
 	}
 	else {
-		peer->Send((char*)&msg, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, clientProfiles[client].profiles->address, false);
+		RakNet::SystemAddress tmp;
+		tmp.FromString(clientProfiles[client].profiles->ip);
+		peer->Send((char*)&msg, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, tmp, false);
 	}
 }
 
@@ -75,7 +80,8 @@ void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int m
 
 				//Cast to a char* to send the struct as a packet
 				peer->Send((char*)&send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-				profile->address = packet->systemAddress;
+
+				strcpy(profile->ip, packet->systemAddress.ToString());
 				profile->isHost = true;
 				break;
 			}
@@ -120,7 +126,8 @@ void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int m
 				//Since this is the server we can still use the profileList struct
 				MsgStruct* read = (MsgStruct*)packet->data;
 				strcpy(clientProfiles->profiles[clientProfiles->iter].name, read->msg);
-				clientProfiles->profiles[clientProfiles->iter].address = packet->systemAddress;
+
+				strcpy(clientProfiles->profiles[clientProfiles->iter].ip, packet->systemAddress.ToString());
 
 				printf("Client connected with name %s\n", clientProfiles->profiles[clientProfiles->iter].name);
 				clientProfiles->iter++;
@@ -219,7 +226,9 @@ int main(void){
 				}
 				else {
 					//Cast to a char* to send the struct as a packet
-					peer->Send((char*)& send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, profile.address, false);
+					RakNet::SystemAddress tmp;
+					tmp.FromString(profile.ip);
+					peer->Send((char*)& send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, tmp, false);
 				}
 			}
 			//Otherwise check command
