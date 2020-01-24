@@ -13,6 +13,8 @@ enum GameMessages{
 	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1,ID_NAME
 };
 
+const unsigned int MAXCLIENTS = 10;
+
 #pragma pack(push, 1)
 struct MsgStruct {
 	unsigned char id;
@@ -20,16 +22,36 @@ struct MsgStruct {
 };
 #pragma pack(pop)
 
+#pragma pack(push, 1)
 struct UserProfile {
 	RakNet::SystemAddress address;
-	char* name;
+	char name[127];
 	bool isHost;
 };
+#pragma pack(pop)
 
-void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int maxClients, unsigned int serverPort, RakNet::Packet* packet){
+struct ProfileList {
+	UserProfile profiles[MAXCLIENTS];
+	int iter = 0;
+};
+
+void SendToClient(RakNet::RakPeerInterface* peer, ProfileList* clientProfiles, MsgStruct msg, int client = -1){
+	if(client == -1){
+		for(int i = 0; i < clientProfiles->iter; i++){
+			peer->Send((char*)&msg, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, clientProfiles[i].profiles->address, false);
+		}
+	}
+	else {
+		peer->Send((char*)&msg, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, clientProfiles[client].profiles->address, false);
+	}
+}
+
+void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int maxClients, unsigned int serverPort, UserProfile* profile, ProfileList* clientProfiles){
 	char msg[127];
 	
 	bool running = true;
+
+	RakNet::Packet* packet;
 
 	while(running){
 		for(packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive()){
@@ -48,10 +70,13 @@ void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int m
 
 				// Use a struct to send the id of the game
 				MsgStruct send;
-				send.id = (RakNet::MessageID)ID_GAME_MESSAGE_1;
+				send.id = (RakNet::MessageID)ID_NAME;
+				strcpy(send.msg, clientProfiles->profiles[0].name);
 
 				//Cast to a char* to send the struct as a packet
 				peer->Send((char*)&send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				profile->address = packet->systemAddress;
+				profile->isHost = true;
 				break;
 			}
 			case ID_NEW_INCOMING_CONNECTION:
@@ -82,9 +107,23 @@ void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int m
 				//Cast it back to a struct to be read
 				MsgStruct* read = (MsgStruct*)packet->data;
 
+				printf("Message recieved: %s\n", read->msg);
+
 				//Message recieved
-				printf("Message recieved with key %i\n", read->id);
-				printf("Message contains: %s\n", read->msg);
+				SendToClient(peer, clientProfiles, *read);
+				break;
+			}
+
+			case ID_NAME: {
+
+				//If we are getting a name then store it for later.
+				//Since this is the server we can still use the profileList struct
+				MsgStruct* read = (MsgStruct*)packet->data;
+				strcpy(clientProfiles->profiles[clientProfiles->iter].name, read->msg);
+				clientProfiles->profiles[clientProfiles->iter].address = packet->systemAddress;
+
+				printf("Client connected with name %s\n", clientProfiles->profiles[clientProfiles->iter].name);
+				clientProfiles->iter++;
 				break;
 			}
 			default:
@@ -96,12 +135,13 @@ void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int m
 }
 
 int main(void){
-	unsigned int maxClients = 10;
 	unsigned short serverPort = 60000;
 
 	char str[127];
 	RakNet::RakPeerInterface* peer = RakNet::RakPeerInterface::GetInstance();
 	RakNet::Packet* packet;
+	UserProfile profile; //This is for the server (if we are client)
+	ProfileList clientProfiles;
 	bool isServer;
 
 	printf("C to connect to a chat room or H to host a chat room\n");
@@ -114,14 +154,14 @@ int main(void){
 	//You can actually type anything other than c for hosting
 	else {
 		RakNet::SocketDescriptor sd(serverPort, 0);
-		peer->Startup(maxClients, &sd, 1);
+		peer->Startup(MAXCLIENTS, &sd, 1);
 		isServer = true;
 	}
 
 	if(isServer){
 		printf("Starting the server.\n");
 		// We need to let the server accept incoming connections from the clients
-		peer->SetMaximumIncomingConnections(maxClients);
+		peer->SetMaximumIncomingConnections(MAXCLIENTS);
 	}
 	else {
 		printf("Enter server IP or hit enter for 127.0.0.1\n");
@@ -129,13 +169,21 @@ int main(void){
 		if(str[0] == '\n'){
 			strcpy(str, "127.0.0.1");
 		}
+
+		printf("Enter your user name: ");
+		if(str[0] == '\n'){
+			strcpy(str, "Blank");
+		}
+		fgets(clientProfiles.profiles[0].name, 127, stdin);
+
+
 		printf("Starting the client.\n");
 		peer->Connect(str, serverPort, 0, 0);
 	}
 
 	bool running = true;
 
-	std::thread handlePackets(PacketHandler, peer, isServer, maxClients, serverPort, packet);
+	std::thread handlePackets(PacketHandler, peer, isServer, MAXCLIENTS, serverPort, &profile, &clientProfiles);
 
 	while(running){
 		fgets(str, 127, stdin);
@@ -145,11 +193,11 @@ int main(void){
 				MsgStruct send;
 				send.id = (RakNet::MessageID)ID_GAME_MESSAGE_1;
 				strcpy(send.msg, str);
-				peer->Send((char*)&send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+				peer->Send((char*)&send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, profile.address, false);
 
 				//Cast to a char* to send the struct as a packet
 			}
-			//Otherwise send the message
+			//Otherwise check command
 			else {
 
 			}
