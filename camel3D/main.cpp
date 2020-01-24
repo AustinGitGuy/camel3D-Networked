@@ -201,14 +201,26 @@ int main(void){
 				*nameEnd = ' ';
 
 				char tmp[127];
-				strcpy(tmp, clientProfiles.profiles[0].name);
+
+				if(isServer){
+					strcpy(tmp, "Server: ");
+				}
+				else {
+					strcpy(tmp, clientProfiles.profiles[0].name);
+				}
+				
 
 				MsgStruct send;
 				send.id = (RakNet::MessageID)ID_GAME_MESSAGE_1;
 				strcpy(send.msg, strcat(tmp, str));
 
-				//Cast to a char* to send the struct as a packet
-				peer->Send((char*)&send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, profile.address, false);
+				if(isServer){
+					SendToClient(peer, &clientProfiles, send);
+				}
+				else {
+					//Cast to a char* to send the struct as a packet
+					peer->Send((char*)& send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, profile.address, false);
+				}
 			}
 			//Otherwise check command
 			else {
