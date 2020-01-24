@@ -18,7 +18,7 @@ const unsigned int MAXCLIENTS = 10;
 #pragma pack(push, 1)
 struct MsgStruct {
 	unsigned char id;
-	 char msg[127];
+	char msg[127];
 };
 #pragma pack(pop)
 
@@ -107,7 +107,7 @@ void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int m
 				//Cast it back to a struct to be read
 				MsgStruct* read = (MsgStruct*)packet->data;
 
-				printf("Message recieved: %s\n", read->msg);
+				printf("%s\n", read->msg);
 
 				//Message recieved
 				SendToClient(peer, clientProfiles, *read);
@@ -164,6 +164,7 @@ int main(void){
 		peer->SetMaximumIncomingConnections(MAXCLIENTS);
 	}
 	else {
+		//If client: get the ip and the username, then start the client
 		printf("Enter server IP or hit enter for 127.0.0.1\n");
 		fgets(str, 127, stdin);
 		if(str[0] == '\n'){
@@ -176,6 +177,9 @@ int main(void){
 		}
 		fgets(clientProfiles.profiles[0].name, 127, stdin);
 
+		char* nameEnd;
+		nameEnd = strchr(clientProfiles.profiles[0].name, '\n');
+		*nameEnd = ':';
 
 		printf("Starting the client.\n");
 		peer->Connect(str, serverPort, 0, 0);
@@ -183,6 +187,7 @@ int main(void){
 
 	bool running = true;
 
+	//Start a new thread to handle packets so we can use this one to run input manager
 	std::thread handlePackets(PacketHandler, peer, isServer, MAXCLIENTS, serverPort, &profile, &clientProfiles);
 
 	while(running){
@@ -190,12 +195,20 @@ int main(void){
 		if(str[0] != '\n'){
 			//Check if a command is typed
 			if(str[0] != '/'){
+
+				char* nameEnd;
+				nameEnd = strchr(str, '\n');
+				*nameEnd = ' ';
+
+				char tmp[127];
+				strcpy(tmp, clientProfiles.profiles[0].name);
+
 				MsgStruct send;
 				send.id = (RakNet::MessageID)ID_GAME_MESSAGE_1;
-				strcpy(send.msg, str);
-				peer->Send((char*)&send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, profile.address, false);
+				strcpy(send.msg, strcat(tmp, str));
 
 				//Cast to a char* to send the struct as a packet
+				peer->Send((char*)&send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, profile.address, false);
 			}
 			//Otherwise check command
 			else {
