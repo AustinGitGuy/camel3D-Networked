@@ -51,24 +51,24 @@ void SendToClient(RakNet::RakPeerInterface* peer, ProfileList* clientProfiles, M
 }
 
 //Prints all connected cilents and their IP addresses
-void PrintClientList(RakNet::RakPeerInterface* peer, ProfileList* clientProfiles, MsgStruct msg)
+void PrintClientList(ProfileList* clientProfiles)
 {
-
+	printf("\n****CLIENT LIST****");
+	printf("\nUsername    IP Address");
+	printf("\n------------------------\n");
 	for (int i = 0; i < clientProfiles->iter; i++)
 	{
-		
+		printf("%s      ", clientProfiles->profiles[i].name);
+		printf("%s\n",clientProfiles->profiles[i].address.ToString());
 	}
-
-
 }
 
 //Below Fucntion is used to display all available commands for program
 void DisplayCommands() 
 {
-	printf("/help : Displays available commands\n /private : Send a private message to the defined user (/private Username Message)\n /cilents Displays List of currently connected clients (Host Only) /quit : Return to chatroom selection.\n");
+	printf("\nAvailable Commands\n------------------\n");
+	printf("/help : Displays available commands\n/whisper : Send a private message to the defined user (/whisper Username Message)\n/clients : Displays list of currently connected clients (Host Only)\n/quit : Return to chatroom selection.\nType your message and press enter to send a public message\n");
 }
-
-
 
 void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int maxClients, unsigned int serverPort, UserProfile* profile, ProfileList* clientProfiles){
 	char msg[127];
@@ -89,10 +89,6 @@ void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int m
 
 				//Cast to a char* to send the struct as a packet
 				peer->Send((char*)& send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-
-				//Remove Disconnected user from profile list
-				//profile->address = packet->systemAddress;
-				//profile->isHost = true;
 				break;
 			case ID_REMOTE_CONNECTION_LOST:
 				printf("Another client has lost the connection.\n");
@@ -177,7 +173,6 @@ void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int m
 			}
 
 			case ID_GAME_MESSAGE_PRIVATE: {
-
 				//Cast it back to a struct to be read
 				MsgStruct* read = (MsgStruct*)packet->data;
 
@@ -209,7 +204,6 @@ void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int m
 					break;
 				}
 			}
-
 			default:
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
 				break;
@@ -320,11 +314,11 @@ int main(void){
 				//Otherwise check command
 				else {
 
-					if (str[1] == 'h')//Displays list of commands
+					if (str[1] == 'h' || str[1] == 'H')//Displays list of commands
 					{
 						DisplayCommands();
 					}
-					else if (str[1] == 'p')//Private message
+					else if (str[1] == 'w' || str[1] == 'W')//Private message
 					{
 
 						char* trash;
@@ -358,18 +352,18 @@ int main(void){
 						peer->Send((char*)& send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, profile.address, false);
 
 					}
-					else if (str[1] == 'c')//Displays list of connected clients
+					else if (str[1] == 'c' || str[1] == 'C')//Displays list of connected clients
 					{
 						if (isServer)//If server run command
 						{
-							//PrintClientList();
+							PrintClientList(&clientProfiles);
 						}
 						else//If not server deny access
 						{
 							printf("Access to command denied.\n");
 						}
 					}
-					else if (str[1] == 'q')//Leaves current chat room and brings user back to the Lobby
+					else if (str[1] == 'q' || str[1] == 'Q')//Leaves current chat room and brings user back to the Lobby
 					{
 						MsgStruct send;
 						send.id = (RakNet::MessageID)ID_NAME_LEAVE;
