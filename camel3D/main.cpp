@@ -11,7 +11,7 @@
 #include "Raknet/RakNetTypes.h"
 
 enum GameMessages{
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, CLIENT_LIST
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE
 };
 
 const unsigned int MAXCLIENTS = 10;
@@ -19,6 +19,7 @@ const unsigned int MAXCLIENTS = 10;
 #pragma pack(push, 1)
 struct MsgStruct {
 	unsigned char id;
+	char name[127];
 	char msg[127];
 };
 #pragma pack(pop)
@@ -53,7 +54,7 @@ void PrintClientList(RakNet::RakPeerInterface* peer, ProfileList* clientProfiles
 {
 	for (int i = 0; i < clientProfiles->iter; i++)
 	{
-		peer->Send((char*)& msg, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, clientProfiles->profiles[-1].address, false);
+		
 	}
 
 
@@ -62,7 +63,7 @@ void PrintClientList(RakNet::RakPeerInterface* peer, ProfileList* clientProfiles
 //Below Fucntion is used to display all available commands for program
 void DisplayCommands() 
 {
-	printf("/help : Displays available commands\n /private : Send a private message to the defined user (/private Username Message)\n /cilents Displays List of currently connected clients (Host Only) /quit : Return to chatroom selection.%s\n");
+	printf("/help : Displays available commands\n /private : Send a private message to the defined user (/private Username Message)\n /cilents Displays List of currently connected clients (Host Only) /quit : Return to chatroom selection.\n");
 }
 
 
@@ -173,15 +174,39 @@ void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int m
 				break;
 			}
 
-			case CLIENT_LIST: {
+			case ID_GAME_MESSAGE_PRIVATE: {
 
+				//Cast it back to a struct to be read
 				MsgStruct* read = (MsgStruct*)packet->data;
-				strcpy(clientProfiles->profiles[clientProfiles->iter].name, read->msg);
-				clientProfiles->profiles[clientProfiles->iter].address = packet->systemAddress;
 
-				printf("Client connected with name %s\n", clientProfiles->profiles[clientProfiles->iter].name);
-				clientProfiles->iter++;
-				break;
+				int i;
+				for (i = 0; i < clientProfiles->iter; i++)
+				{
+					if (strcmp(read->name, clientProfiles->profiles[i].name) == 0)//compares Name in str to list of names in clientProfiles
+					{
+						break;
+					}
+					
+				}
+
+				if (i >= clientProfiles->iter)
+				{
+					strcpy(read->msg, "Could not find user.\n");
+
+					peer->Send((char*)& read, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+					break;
+
+				}
+				else
+				{
+					printf("%s\n", read->msg);
+
+					//Message recieved
+					SendToClient(peer, clientProfiles, *read, i);
+					break;
+				}
+
+				
 			}
 
 			default:
@@ -296,21 +321,15 @@ int main(void){
 				}
 				else if(str[1] == 'p')//Private message
 				{
-					RakNet::SystemAddress dirAddress;
+					
 
-					for (int i = 0; i < clientProfiles.iter; i++)
-					{
-						//if (clientProfiles.profiles[i].name == )
-						if (strcmp(str, clientProfiles.profiles[i].name) == 0)//compares Name in str to list of names in clientProfiles
-						{
-							dirAddress = clientProfiles.profiles[i].address;// Get the address of that client to be used later
-							break;
-						}
-						else
-						{
+					char* trash;
+					trash = strchr(str, '/');
+					*trash = ' ';
+					trash = strchr(str, 'p');
+					*trash = ' ';
 
-						}
-					}
+					
 
 					char* nameEnd;
 					nameEnd = strchr(str, '\n');
@@ -329,9 +348,10 @@ int main(void){
 
 					MsgStruct send;
 					send.id = (RakNet::MessageID)ID_GAME_MESSAGE_1;
+					strcpy(send.name, str);
 					strcpy(send.msg, strcat(tmp, str));
 
-					peer->Send((char*)& send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, dirAddress, false);
+					peer->Send((char*)& send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, profile.address, false);
 
 				}
 				else if (str[1] == 'c')//Displays list of connected clients
@@ -342,7 +362,7 @@ int main(void){
 					}
 					else//If not server deny access
 					{
-						printf("Access to command denied.%s\n");
+						printf("Access to command denied.\n");
 					}
 				}
 				else if (str[1] == 'q')//Leaves current chat room and brings user back to the Lobby
@@ -351,7 +371,7 @@ int main(void){
 				}
 				else//If no command is recognized display message and display list of commands
 				{
-					printf("Invalid Command. Please use one of the below commands.%s\n");
+					printf("Invalid Command. Please use one of the below commands.\n");
 					DisplayCommands();
 				}
 
