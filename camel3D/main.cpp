@@ -19,7 +19,8 @@ const unsigned int MAXCLIENTS = 10;
 #pragma pack(push, 1)
 struct MsgStruct {
 	unsigned char id;
-	char name[127];
+	char senderName[127];
+	char receiveName[127];
 	char msg[127];
 };
 #pragma pack(pop)
@@ -52,6 +53,7 @@ void SendToClient(RakNet::RakPeerInterface* peer, ProfileList* clientProfiles, M
 //Prints all connected cilents and their IP addresses
 void PrintClientList(RakNet::RakPeerInterface* peer, ProfileList* clientProfiles, MsgStruct msg)
 {
+
 	for (int i = 0; i < clientProfiles->iter; i++)
 	{
 		
@@ -142,6 +144,7 @@ void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int m
 				//Cast it back to a struct to be read
 				MsgStruct* read = (MsgStruct*)packet->data;
 
+				printf("%s ", read->senderName);
 				printf("%s\n", read->msg);
 
 				//Message recieved
@@ -166,10 +169,9 @@ void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int m
 				//If we are getting a name then store it for later.
 				//Since this is the server we can still use the profileList struct
 				MsgStruct* read = (MsgStruct*)packet->data;
-				strcpy(clientProfiles->profiles[clientProfiles->iter].name, read->msg);
-				clientProfiles->profiles[clientProfiles->iter].address = packet->systemAddress;
+				
 
-				printf(clientProfiles->profiles[clientProfiles->iter].name, "has disconnected %s\n");
+				printf("%s has disconnected\n", read->senderName);
 				clientProfiles->iter--;
 				break;
 			}
@@ -182,31 +184,30 @@ void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int m
 				int i;
 				for (i = 0; i < clientProfiles->iter; i++)
 				{
-					if (strcmp(read->name, clientProfiles->profiles[i].name) == 0)//compares Name in str to list of names in clientProfiles
+					if (strcmp(read->receiveName, clientProfiles->profiles[i].name) == 0)//compares Name in str to list of names in clientProfiles
 					{
 						break;
 					}
 					
 				}
 
-				if (i >= clientProfiles->iter)
+				if (i > clientProfiles->iter)
 				{
 					strcpy(read->msg, "Could not find user.\n");
 
 					peer->Send((char*)& read, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 					break;
-
 				}
 				else
 				{
+					printf("%s ", read->senderName);
+					printf("%s", read->receiveName);
 					printf("%s\n", read->msg);
 
 					//Message recieved
 					SendToClient(peer, clientProfiles, *read, i);
 					break;
 				}
-
-				
 			}
 
 			default:
@@ -227,159 +228,173 @@ int main(void){
 	ProfileList clientProfiles;
 	bool isServer;
 	bool running = true;
-	bool programTrue;//Used to reset back to lobby
+	bool programTrue = true;//Used to reset back to lobby
 
 
-	printf("C to connect to a chat room or H to host a chat room or Q to quit the program\n");
-	fgets(str, 127, stdin);
-	if ((str[0] == 'c') || (str[0] == 'C')){
-		RakNet::SocketDescriptor sd;
-		peer->Startup(1, &sd, 1);
-		isServer = false;
-	}
-	else if ((str[0] == 'q') || (str[0] == 'Q')) {
-		running = false;
-	}
-	else { //You can actually type anything other than c for hosting
-		RakNet::SocketDescriptor sd(serverPort, 0);
-		peer->Startup(MAXCLIENTS, &sd, 1);
-		isServer = true;
-	}
-
-	if(isServer){
-		printf("Starting the server.\n");
-		// We need to let the server accept incoming connections from the clients
-		peer->SetMaximumIncomingConnections(MAXCLIENTS);
-	}
-	else {
-		//If client: get the ip and the username, then start the client
-		printf("Enter server IP or hit enter for 127.0.0.1\n");
+	while (programTrue)
+	{
+		system("CLS");
+		printf("C to connect to a chat room or H to host a chat room or Q to quit the program\n");
 		fgets(str, 127, stdin);
-		if(str[0] == '\n'){
-			strcpy(str, "127.0.0.1");
+		if ((str[0] == 'c') || (str[0] == 'C')) {
+			RakNet::SocketDescriptor sd;
+			peer->Startup(1, &sd, 1);
+			isServer = false;
+		}
+		else if ((str[0] == 'q') || (str[0] == 'Q')) {
+			programTrue = false;
+			running = false;
+			break;
+		}
+		else { //You can actually type anything other than c for hosting
+			RakNet::SocketDescriptor sd(serverPort, 0);
+			peer->Startup(MAXCLIENTS, &sd, 1);
+			isServer = true;
 		}
 
-		printf("Enter your user name: ");
-		if(str[0] == '\n'){
-			strcpy(str, "Blank");
+		if (isServer) {
+			printf("Starting the server.\n");
+			// We need to let the server accept incoming connections from the clients
+			peer->SetMaximumIncomingConnections(MAXCLIENTS);
 		}
-		fgets(clientProfiles.profiles[0].name, 127, stdin);
-
-		char* nameEnd;
-		nameEnd = strchr(clientProfiles.profiles[0].name, '\n');
-		*nameEnd = ':';
-
-		printf("Starting the client.\n");
-		peer->Connect(str, serverPort, 0, 0);
-	}
-
-	
-
-	//Start a new thread to handle packets so we can use this one to run input manager
-	std::thread handlePackets(PacketHandler, peer, isServer, MAXCLIENTS, serverPort, &profile, &clientProfiles);
-
-	while(running){
-		fgets(str, 127, stdin);
-		if(str[0] != '\n'){
-			//Check if a command is typed
-			if(str[0] != '/'){
-
-				char* nameEnd;
-				nameEnd = strchr(str, '\n');
-				*nameEnd = ' ';
-
-				char tmp[127];
-
-				if(isServer){
-					strcpy(tmp, "Server: ");//Appends Server to Beginning of Message
-				}
-				else {
-					strcpy(tmp, clientProfiles.profiles[0].name);//Appends Cilent Username to Beginning of Message
-				}
-
-				strcpy(tmp, "(Public) ");//Appends a notification that Message is public
-
-				MsgStruct send;
-				send.id = (RakNet::MessageID)ID_GAME_MESSAGE_1;
-				strcpy(send.msg, strcat(tmp, str));
-
-				if(isServer){
-					SendToClient(peer, &clientProfiles, send);
-				}
-				else {
-					//Cast to a char* to send the struct as a packet
-					peer->Send((char*)& send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, profile.address, false);
-				}
+		else {
+			//If client: get the ip and the username, then start the client
+			printf("Enter server IP or hit enter for 127.0.0.1\n");
+			fgets(str, 127, stdin);
+			if (str[0] == '\n') {
+				strcpy(str, "127.0.0.1");
 			}
-			//Otherwise check command
-			else {
 
-				if (str[1] == 'h')//Displays list of commands
-				{
-					DisplayCommands();
-				}
-				else if(str[1] == 'p')//Private message
-				{
-					
+			printf("Enter your user name: ");
+			if (str[0] == '\n') {
+				strcpy(str, "Blank");
+			}
+			fgets(clientProfiles.profiles[0].name, 127, stdin);
 
-					char* trash;
-					trash = strchr(str, '/');
-					*trash = ' ';
-					trash = strchr(str, 'p');
-					*trash = ' ';
+			char* nameEnd;
+			nameEnd = strchr(clientProfiles.profiles[0].name, '\n');
+			*nameEnd = '\0';
 
-					
+			printf("Starting the client.\n");
+			peer->Connect(str, serverPort, 0, 0);
+		}
+
+		//Start a new thread to handle packets so we can use this one to run input manager
+		std::thread handlePackets(PacketHandler, peer, isServer, MAXCLIENTS, serverPort, &profile, &clientProfiles);
+		
+		DisplayCommands();
+
+		while (running) {
+			fgets(str, 127, stdin);
+			if (str[0] != '\n') {
+				//Check if a command is typed
+				if (str[0] != '/') {
 
 					char* nameEnd;
 					nameEnd = strchr(str, '\n');
 					*nameEnd = ' ';
 
 					char tmp[127];
+					MsgStruct send;
 
 					if (isServer) {
 						strcpy(tmp, "Server: ");//Appends Server to Beginning of Message
 					}
 					else {
-						strcpy(tmp, clientProfiles.profiles[0].name);//Appends Client Username to Beginning of Message
+						strcpy(send.senderName, clientProfiles.profiles[0].name);//Appends Cilent Username to Beginning of Message
 					}
 
-					strcpy(tmp, "(Whisper) ");//Appends a notification that Message is private
+					strcat(tmp, ": (Public) ");//Appends a notification that Message is public
 
-					MsgStruct send;
 					send.id = (RakNet::MessageID)ID_GAME_MESSAGE_1;
-					strcpy(send.name, str);
-					strcpy(send.msg, strcat(tmp, str));
+					strcpy(send.msg, strcpy(tmp, str));
 
-					peer->Send((char*)& send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, profile.address, false);
-
-				}
-				else if (str[1] == 'c')//Displays list of connected clients
-				{
-					if (isServer)//If server run command
-					{
-						//PrintClientList(peer, clientProfiles, )
+					if (isServer) {
+						SendToClient(peer, &clientProfiles, send);
 					}
-					else//If not server deny access
-					{
-						printf("Access to command denied.\n");
+					else {
+						//Cast to a char* to send the struct as a packet
+						peer->Send((char*)& send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, profile.address, false);
 					}
 				}
-				else if (str[1] == 'q')//Leaves current chat room and brings user back to the Lobby
-				{
+				//Otherwise check command
+				else {
+
+					if (str[1] == 'h')//Displays list of commands
+					{
+						DisplayCommands();
+					}
+					else if (str[1] == 'p')//Private message
+					{
+
+						char* trash;
+
+						char* nameEnd;
+						nameEnd = strchr(str, '\n');
+						*nameEnd = ' ';
+
+						trash = strtok(str, " ");
+						trash = strtok(NULL, " ");
+
+						MsgStruct send;
+						char tmp[127];
+
+						if (isServer) {
+							strcpy(tmp, "Server: ");//Appends Server to Beginning of Message
+						}
+						else {
+							strcpy(send.senderName, clientProfiles.profiles[0].name);//Appends Client Username to Beginning of Message
+						}
+
+						strcpy(tmp, ": (Whisper) ");//Appends a notification that Message is private
+
+						
+						send.id = (RakNet::MessageID)ID_GAME_MESSAGE_PRIVATE;
+						strcpy(send.receiveName, trash);//Setting who is receiving the message
+						//strcpy(send.senderName, clientProfiles.profiles[0].name); //setting who is sending the message
+						trash = strtok(NULL, " ");
+						strcpy(send.msg, strcat(tmp, trash));
+
+						peer->Send((char*)& send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, profile.address, false);
+
+					}
+					else if (str[1] == 'c')//Displays list of connected clients
+					{
+						if (isServer)//If server run command
+						{
+							//PrintClientList();
+						}
+						else//If not server deny access
+						{
+							printf("Access to command denied.\n");
+						}
+					}
+					else if (str[1] == 'q')//Leaves current chat room and brings user back to the Lobby
+					{
+						MsgStruct send;
+						send.id = (RakNet::MessageID)ID_NAME_LEAVE;
+						strcpy(send.senderName, clientProfiles.profiles[0].name);
+
+						peer->Send((char*)& send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, profile.address, false);
+
+						running = false;
+						programTrue = true;
+						handlePackets.detach();
+					}
+					else//If no command is recognized display message and display list of commands
+					{
+						printf("Invalid Command. Please use one of the below commands.\n");
+						DisplayCommands();
+					}
+
 
 				}
-				else//If no command is recognized display message and display list of commands
-				{
-					printf("Invalid Command. Please use one of the below commands.\n");
-					DisplayCommands();
-				}
-
-
 			}
-		}
 
+		}
 	}
 
+	
 	RakNet::RakPeerInterface::DestroyInstance(peer);
 
 	return 0;
