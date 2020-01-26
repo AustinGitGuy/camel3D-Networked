@@ -237,11 +237,10 @@ int main(void){
 		peer->Startup(1, &sd, 1);
 		isServer = false;
 	}
-	if ((str[0] == 'q') || (str[0] == 'Q')) {
+	else if ((str[0] == 'q') || (str[0] == 'Q')) {
 		running = false;
 	}
-	//You can actually type anything other than c for hosting
-	else {
+	else { //You can actually type anything other than c for hosting
 		RakNet::SocketDescriptor sd(serverPort, 0);
 		peer->Startup(MAXCLIENTS, &sd, 1);
 		isServer = true;
