@@ -300,9 +300,10 @@ int main(void){
 
 					for (int i = 0; i < clientProfiles.iter; i++)
 					{
-						if (clientProfiles.profiles[i].name == )
+						//if (clientProfiles.profiles[i].name == )
+						if (strcmp(str, clientProfiles.profiles[i].name) == 0)//compares Name in str to list of names in clientProfiles
 						{
-							dirAddress = clientProfiles.profiles[i].address;
+							dirAddress = clientProfiles.profiles[i].address;// Get the address of that client to be used later
 							break;
 						}
 						else
@@ -350,7 +351,7 @@ int main(void){
 				}
 				else//If no command is recognized display message and display list of commands
 				{
-					printf("Invalid Command.  Please use one of the below commands.%s\n");
+					printf("Invalid Command. Please use one of the below commands.%s\n");
 					DisplayCommands();
 				}
 
@@ -359,7 +360,6 @@ int main(void){
 		}
 
 	}
-
 
 	RakNet::RakPeerInterface::DestroyInstance(peer);
 
