@@ -63,21 +63,35 @@ void PrintClientList(ProfileList* clientProfiles)
 	}
 }
 
-//Below Fucntion is used to display all available commands for program
-void DisplayCommands() 
+//Below Fucntion is used to display all available commands for tic-tac-toe
+void DisplayCommandsTTT() 
 {
 	printf("\nAvailable Commands\n------------------\n");
-	printf("/help : Displays available commands\n/whisper : Send a private message to the defined user (/whisper Username Message)\n/clients : Displays list of currently connected clients (Host Only)\n/quit : Return to chatroom selection.\nType your message and press enter to send a public message\n");
+	printf("/help : Displays available commands\n"
+		"/whisper : Send a private message to the defined user (/whisper Username Message)\n"
+		"/clients : Displays list of currently connected clients (Host Only)\n"
+		"/ place{ x } {y} : Place a tic - tac - toe piece at x, y\n"
+		"/quit : Return to chatroom selection.\n"
+		"Type your message and press enter to send a public message\n");
+}
+
+//Below Fucntion is used to display all available commands for battleship
+void DiplsayCommandsBattleship() {
+	printf("\nAvailable Commands\n------------------\n");
+	printf("/help : Displays available commands\n"
+		"/whisper : Send a private message to the defined user (/whisper Username Message)\n"
+		"/clients : Displays list of currently connected clients (Host Only)\n"
+		"/quit : Return to chatroom selection.\n"
+		"Type your message and press enter to send a public message\n");
 }
 
 void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int maxClients, unsigned int serverPort, UserProfile* profile, ProfileList* clientProfiles){
-	char msg[127];
 	
 	bool running = true;
 
 	RakNet::Packet* packet;
 
-	while(running){
+	while(running && peer){
 		for(packet = peer->Receive(); packet; peer->DeallocatePacket(packet), packet = peer->Receive()){
 			switch(packet->data[0]){
 			case ID_REMOTE_DISCONNECTION_NOTIFICATION:
@@ -217,7 +231,6 @@ int main(void){
 
 	char str[127];
 	RakNet::RakPeerInterface* peer = RakNet::RakPeerInterface::GetInstance();
-	RakNet::Packet* packet;
 	UserProfile profile; //This is for the server (if we are client)
 	ProfileList clientProfiles;
 	bool isServer;
@@ -228,7 +241,7 @@ int main(void){
 	while (programTrue)
 	{
 		system("CLS");
-		printf("C to connect to a chat room or H to host a chat room or Q to quit the program\n");
+		printf("C to connect to a game or H to host a game or Q to quit the program\n");
 		fgets(str, 127, stdin);
 		if ((str[0] == 'c') || (str[0] == 'C')) {
 			RakNet::SocketDescriptor sd;
@@ -276,7 +289,7 @@ int main(void){
 		//Start a new thread to handle packets so we can use this one to run input manager
 		std::thread handlePackets(PacketHandler, peer, isServer, MAXCLIENTS, serverPort, &profile, &clientProfiles);
 		
-		DisplayCommands();
+		DisplayCommandsTTT();
 
 		while (running) {
 			fgets(str, 127, stdin);
@@ -316,7 +329,7 @@ int main(void){
 
 					if (str[1] == 'h' || str[1] == 'H')//Displays list of commands
 					{
-						DisplayCommands();
+						DisplayCommandsTTT();
 					}
 					else if (str[1] == 'w' || str[1] == 'W')//Private message
 					{
@@ -378,10 +391,8 @@ int main(void){
 					else//If no command is recognized display message and display list of commands
 					{
 						printf("Invalid Command. Please use one of the below commands.\n");
-						DisplayCommands();
+						DisplayCommandsTTT();
 					}
-
-
 				}
 			}
 
