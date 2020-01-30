@@ -11,7 +11,7 @@
 #include "Raknet/RakNetTypes.h"
 
 enum GameMessages{
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE, ID_GAME_MOVE_TTT, ID_GAME_MOVE_BS
 };
 
 const unsigned int MAXCLIENTS = 10;
@@ -22,6 +22,14 @@ struct MsgStruct {
 	char senderName[127];
 	char receiveName[127];
 	char msg[127];
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct MoveStruct {
+	unsigned char id;
+	char senderName[127];
+	char gameMove[127];
 };
 #pragma pack(pop)
 
@@ -218,6 +226,11 @@ void PacketHandler(RakNet::RakPeerInterface* peer, bool isServer, unsigned int m
 					break;
 				}
 			}
+			case ID_GAME_MOVE_TTT: {
+				MoveStruct* read = (MoveStruct*)packet->data;
+						
+			
+			}
 			default:
 				printf("Message with identifier %i has arrived.\n", packet->data[0]);
 				break;
@@ -330,6 +343,10 @@ int main(void){
 					if (str[1] == 'h' || str[1] == 'H')//Displays list of commands
 					{
 						DisplayCommandsTTT();
+					}
+					else if (str[1] == 'g' || str[1] == 'G')//Game Move.  Make a move in game
+					{
+						//Game move
 					}
 					else if (str[1] == 'w' || str[1] == 'W')//Private message
 					{
