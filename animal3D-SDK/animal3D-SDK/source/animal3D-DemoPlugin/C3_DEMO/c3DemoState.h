@@ -2,6 +2,40 @@
 #include "animal3D-A3DG/animal3D-A3DG.h"
 
 #include "RakNet/RakPeerInterface.h"
+#include "RakNet/MessageIdentifiers.h"
+#include "Raknet/BitStream.h"
+#include "Raknet/RakNetTypes.h"
+
+enum GameMessages {
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE
+};
+
+const unsigned int MAXCLIENTS = 10;
+
+#pragma pack(push, 1)
+struct MsgStruct {
+	unsigned char id;
+	char senderName[127];
+	char receiveName[127];
+	char msg[127];
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct UserProfile {
+	RakNet::SystemAddress address;
+	char name[127];
+	bool isHost;
+};
+#pragma pack(pop)
+
+struct ProfileList {
+	UserProfile profiles[MAXCLIENTS];
+	int iter = 0;
+};
+
+void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, MsgStruct msg, int client);
+
 
 #ifndef __CAMEL3D_DEMOSTATE_H
 #define __CAMEL3D_DEMOSTATE_H
@@ -63,6 +97,19 @@ typedef struct c3_DemoState					c3_DemoState;
 		};
 
 		RemoteInfo remote[20];
+
+		//------------------------------
+		//Camel3D Stuff
+		char str[127];
+		unsigned short serverPort = 60000;
+		//RakNet::RakPeerInterface* peer = RakNet::RakPeerInterface::GetInstance();
+		RakNet::Packet* packet;
+		UserProfile profile; //This is for the server (if we are client)
+		ProfileList* clientProfiles;
+		bool isServer;
+		bool running = true;
+		bool programTrue = true;//Used to reset back to lobby
+
 	};
 
 	void c3demoRender(c3_DemoState const* demoState);
@@ -74,6 +121,8 @@ typedef struct c3_DemoState					c3_DemoState;
 	void c3demoNetworkingSend(c3_DemoState const* demoState);
 
 	void c3demoNetworkingRecieve(c3_DemoState const* demoState);
+
+	void c3demoNetworkingRecieveNonConst(c3_DemoState* demoState);
 
 
 #ifdef __cplusplus
