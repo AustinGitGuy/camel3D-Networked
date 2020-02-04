@@ -61,12 +61,6 @@
     <Filter Include="Source Files\common\A3_DEMO\a3_Networking">
       <UniqueIdentifier>{7cd1e83b-1cfa-4949-86a4-d5e0bf1c265a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\common\C3_DEMO">
-      <UniqueIdentifier>{eb1c3bdd-4fe8-4ee8-98ef-8220abb3fdb0}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\C3_DEMO">
-      <UniqueIdentifier>{50427b63-307d-4c1a-b25e-ac8e7787ca5a}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="_src_win\main_dll.c">
@@ -111,11 +105,8 @@
     <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\A3_DEMO\a3_Networking\a3_Networking_gs_battleship.c">
       <Filter>Source Files\common\A3_DEMO\a3_Networking</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3DemoState.h">
-      <Filter>Header Files\C3_DEMO</Filter>
-    </ClCompile>
-    <ClCompile Include="c3Demo.cpp">
-      <Filter>Source Files\common\C3_DEMO</Filter>
+    <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3Demo.cpp">
+      <Filter>Source Files\common\A3_DEMO</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -133,6 +124,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\A3_DEMO\_utilities\a3_DemoShaderProgram.h">
       <Filter>Header Files\A3_DEMO\_utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3DemoState.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

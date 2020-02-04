@@ -6,7 +6,6 @@
 *.BASE.txt
 *.LOCAL.txt
 *.REMOTE.txt
-bin*/
 gen*/
 build*/
 ipch/
@@ -34,3 +33,8 @@ _WORKSPACE/
 /camel3D/.vs
 /camel3D/Debug
 /camel3D/x64
+/animal3D-SDK/animal3D-SDK/bin/x64/v142/Debug/animal3D-DemoPlayerApp.exe
+/animal3D-SDK/animal3D-SDK/bin/x64/v142/Debug/animal3D-DemoPlayerApp.ilk
+/animal3D-SDK/animal3D-SDK/bin/x64/v142/Debug/animal3D-DemoPlayerApp.pdb
+/animal3D-SDK/animal3D-SDK/project/VisualStudio/_SLN/animal3d-sdk/.vs/animal3d-sdk/v16/Solution.VC.db-shm
+/animal3D-SDK/animal3D-SDK/project/VisualStudio/_SLN/animal3d-sdk/.vs/animal3d-sdk/v16/Solution.VC.db-wal
