@@ -107,8 +107,11 @@ typedef struct c3_DemoState					c3_DemoState;
 		UserProfile profile; //This is for the server (if we are client)
 		ProfileList* clientProfiles;
 		bool isServer;
-		bool running = true;
 		bool programTrue = true;//Used to reset back to lobby
+
+		//-----------------------------------
+		//Game Stuff
+		
 
 	};
 
