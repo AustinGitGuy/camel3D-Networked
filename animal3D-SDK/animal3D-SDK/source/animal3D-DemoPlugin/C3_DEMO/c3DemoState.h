@@ -100,6 +100,7 @@ const int MAX_CHARACTERS = 127;
 		//------------------------------
 		//Camel3D Stuff
 		char str[MAX_CHARACTERS];
+		char ip[MAX_CHARACTERS];
 		int index = 0;
 		unsigned short serverPort = 60000;
 		RakNet::Packet* packet;
@@ -108,6 +109,7 @@ const int MAX_CHARACTERS = 127;
 		bool isServer;
 		bool programTrue = true;//Used to reset back to lobby
 		bool inGame = false;
+		int lobbyStage = 0;
 
 		//-----------------------------------
 		//Game Stuff
@@ -128,6 +130,8 @@ const int MAX_CHARACTERS = 127;
 	void c3demoNetworkingRecieveNonConst(c3_DemoState* demoState);
 
 	void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, MsgStruct msg, int client);
+
+	void c3demoNetworkingLobby(c3_DemoState* demoState);
 
 #ifdef __cplusplus
 }

@@ -83,14 +83,11 @@ void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfi
 void c3demoRender(c3_DemoState const* demoState) {
 
 	//Clear the screen
-	glClear(GL_COLOR_BUFFER_BIT);
 
 	if(demoState->inGame){
 		//Draw the chatroom if we are in
+		glClear(GL_COLOR_BUFFER_BIT);
 		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Chat: %s", demoState->str);
-	}
-	else {
-
 	}
 }
 
@@ -103,7 +100,7 @@ void c3demoUpdate(c3_DemoState const* demoState) {
 
 }
 
-void c3demoInput(c3_DemoState const* demoState) {
+void c3demoInput(c3_DemoState const* demoState){
 	//Grab keybaord input and send appriotrate command based on them
 
 	char input[127];
@@ -399,62 +396,94 @@ void c3demoNetworkingRecieveNonConst(c3_DemoState* demoState){
 void c3demoNetworkingLobby(c3_DemoState* demoState) 
 {
 	//system("CLS");
-	a3_TextRenderer texRend;
 
-	//a3textDraw(texRend.handle)
-	printf("C to connect to a chat room or H to host a chat room or Q to quit the program\n");
-	fgets(demoState->str, 127, stdin);
-
-	if ((demoState->str[0] == 'c') || (demoState->str[0] == 'C')) {
-		RakNet::SocketDescriptor sd;
-		demoState->peer->Startup(1, &sd, 1);
-		demoState->isServer = false;
+	glClear(GL_COLOR_BUFFER_BIT);
+	printf("Lobby stage: %i\n", demoState->lobbyStage);
+	if(demoState->lobbyStage == -1){
+		printf("Lobby called when it shouldn't have!\n");
 	}
-	else if ((demoState->str[0] == 'q') || (demoState->str[0] == 'Q')) {
-		demoState->programTrue = false;
-		
-		
+	else if(demoState->lobbyStage == 0) {
+		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "C to connect, H to host, Q to quit: %s", demoState->str);
+		return;
 	}
-	else { //You can actually type anything other than c for hosting
-		RakNet::SocketDescriptor sd(demoState->serverPort, 0);
-		demoState->peer->Startup(MAXCLIENTS, &sd, 1);
-		demoState->isServer = true;
-	}
-
-	if (demoState->isServer) {
-		printf("Starting the server.\n");
-		// We need to let the server accept incoming connections from the clients
-		demoState->peer->SetMaximumIncomingConnections(MAXCLIENTS);
-
-		printf("What Game would you like to play? (B)attleship or (T)ic-Tac-Toe");
-		if (demoState->str[0] == 'T')//If host chose tic tac toe
-		{
-			//Start Tic tac toe game
+	else if(demoState->lobbyStage == 1){
+		if((demoState->str[0] == 'c') || (demoState->str[0] == 'C')){
+			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: ");
+			RakNet::SocketDescriptor sd;
+			demoState->peer->Startup(1, &sd, 1);
+			demoState->isServer = false;
 		}
-		else
-		{
-			//Start Battleship
+		else if ((demoState->str[0] == 'q') || (demoState->str[0] == 'Q')) {
+			//Kill the program
+			demoState->exitFlag = 1;
+			return;
+		}
+		else {
+			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "What Game would you like to play? (B)attleship or (T)ic-Tac-Toe: ");
+			RakNet::SocketDescriptor sd(demoState->serverPort, 0);
+			demoState->peer->Startup(MAXCLIENTS, &sd, 1);
+			demoState->isServer = true;
+		}
+		demoState->lobbyStage++;
+	}
+	else if(demoState->lobbyStage == 2){
+		if(demoState->isServer){
+			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "What Game would you like to play? (B)attleship or (T)ic-Tac-Toe: %s", demoState->str);
+		}
+		else {
+			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: %s", demoState->str);
+		}
+		return;
+	}
+	else if(demoState->lobbyStage == 3){
+		if(demoState->isServer){
+			if (demoState->str[0] == 'T')//If host chose tic tac toe
+			{
+				//Start Tic tac toe game
+			}
+			else
+			{
+				//Start Battleship
+			}
+
+			// We need to let the server accept incoming connections from the clients
+			demoState->peer->SetMaximumIncomingConnections(MAXCLIENTS);
+
+			//TODO: Queue this onto the text stack
+			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Starting the server.");
+			demoState->inGame = true;
+			demoState->lobbyStage = -1;
+		}
+		else {
+			//If client: get the ip and the username, then start the client
+			if(demoState->index == 0){
+				strcpy(demoState->ip, "127.0.0.1");
+			}
+			else {
+				strcpy(demoState->ip, demoState->str);
+			}
+			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter your user name: ");
+			demoState->lobbyStage++;
 		}
 	}
-	else {
-		//If client: get the ip and the username, then start the client
-		printf("Enter server IP or hit enter for 127.0.0.1\n");
-		fgets(demoState->str, 127, stdin);
-		if (demoState->str[0] == '\n') {
-			strcpy(demoState->str, "127.0.0.1");
-		}
-
-		printf("Enter your user name: ");
-		if (demoState->str[0] == '\n') {
+	else if(demoState->lobbyStage == 4){
+		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter your user name: %s", demoState->str);
+		return;
+	}
+	else if(demoState->lobbyStage == 5){
+		if(demoState->index == 0){
 			strcpy(demoState->str, "Blank");
 		}
-		fgets(demoState->clientProfiles->profiles[0].name, 127, stdin);
+		strcpy(demoState->clientProfiles->profiles[0].name, demoState->str);
 
 		char* nameEnd;
 		nameEnd = strchr(demoState->clientProfiles->profiles[0].name, '\n');
 		*nameEnd = '\0';
 
-		printf("Starting the client.\n");
-		demoState->peer->Connect(demoState->str, demoState->serverPort, 0, 0);
+		//TODO: Add this to the text stack
+		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Starting the client.");
+		demoState->peer->Connect(demoState->ip, demoState->serverPort, 0, 0);
+		demoState->inGame = true;
+		demoState->lobbyStage = -1;
 	}
 }

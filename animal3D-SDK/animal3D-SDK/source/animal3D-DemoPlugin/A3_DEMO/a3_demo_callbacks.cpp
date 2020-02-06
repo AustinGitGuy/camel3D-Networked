@@ -217,6 +217,8 @@ A3DYLIBSYMBOL c3_DemoState *a3demoCB_load(c3_DemoState *demoState, a3boolean hot
 
 		demoState->peer = RakNet::RakPeerInterface::GetInstance();
 
+		c3demoNetworkingLobby(demoState);
+
 		// create directory for data
 		a3fileStreamMakeDirectory("./data");
 
@@ -298,8 +300,10 @@ A3DYLIBSYMBOL a3i32 a3demoCB_idle(c3_DemoState *demoState)
 			//a3demo_input(demoState, demoState->renderTimer->secondsPerTick);
 			//a3demo_render(demoState);
 			
-			c3demoUpdate(demoState);
-			c3demoRender(demoState);
+			if(demoState->inGame){
+				c3demoUpdate(demoState);
+				c3demoRender(demoState);
+			}
 			
 			// update input
 			a3mouseUpdate(demoState->mouse);
@@ -425,18 +429,28 @@ A3DYLIBSYMBOL void a3demoCB_keyCharPress(c3_DemoState *demoState, a3i32 asciiKey
 		}
 	}
 	else if(asciiKey == 13){
-		c3demoInput(demoState);
+		if(demoState->inGame){
+			c3demoInput(demoState);
+		}
+		else {
+			demoState->lobbyStage++;
+			c3demoNetworkingLobby(demoState);
+		}
 		demoState->index = 0;
 		for (int i = 0; i < MAX_CHARACTERS; i++) {
 			demoState->str[i] = '\0';
 		}
 	}
 	else {
-		if (demoState->index >= MAX_CHARACTERS) {
+		if(demoState->index >= MAX_CHARACTERS){
 			demoState->index = MAX_CHARACTERS - 1;
 		}
 		demoState->str[demoState->index] = asciiKey;
 		demoState->index++;
+
+		if(!demoState->inGame){
+			c3demoNetworkingLobby(demoState);
+		}
 	}
 	
 //
