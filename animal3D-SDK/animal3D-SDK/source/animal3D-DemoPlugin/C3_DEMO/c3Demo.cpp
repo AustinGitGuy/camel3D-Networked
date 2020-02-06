@@ -30,10 +30,10 @@ void DisplayCommandsChat()
 void DisplayCommandsTTT()
 {
 	printf("\nAvailable Commands\n------------------\n");
-	printf("/help : Displays available commands\n"
+	printf("/help Tic-Tac-Toe : Displays available commands\n"
 		"/whisper : Send a private message to the defined user (/whisper Username Message)\n"
 		"/clients : Displays list of currently connected clients (Host Only)\n"
-		"/ place{ x } {y} : Place a tic - tac - toe piece at x, y\n"
+		"/place{ x } {y} : Place a tic - tac - toe piece at x, y\n"
 		"/quit : Return to chatroom selection.\n"
 		"Type your message and press enter to send a public message\n");
 }
@@ -42,7 +42,8 @@ void DisplayCommandsTTT()
 //Below Fucntion is used to display all available commands for battleship
 void DisplayCommandsBattleship() {
 	printf("\nAvailable Commands\n------------------\n");
-	printf("/help : Displays available commands\n"
+	printf("/help Battleship : Displays available commands\n"
+		"/launch TILE_ID : Makes an attack on inputted tile.(/launch A3)"
 		"/whisper : Send a private message to the defined user (/whisper Username Message)\n"
 		"/clients : Displays list of currently connected clients (Host Only)\n"
 		"/quit : Return to chatroom selection.\n"
@@ -52,7 +53,7 @@ void DisplayCommandsBattleship() {
 
 void DisplayAllCommands() 
 {
-	bool TTTtrue;
+	bool TTTtrue = true;
 	DisplayCommandsChat();
 	
 	if (TTTtrue)//Check which game is being played
@@ -65,8 +66,6 @@ void DisplayAllCommands()
 	}
 }
 
-
-
 void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, MsgStruct msg, int client = -1) {
 	if (client == -1) {
 		for (int i = 0; i < clientProfiles->iter; i++) {
@@ -78,7 +77,6 @@ void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfi
 		peer->Send((char*)&msg, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, clientProfiles->profiles[client].address, false);
 	}
 }
-
 
 void c3demoRender(c3_DemoState const* demoState) {
 
@@ -134,6 +132,7 @@ void c3demoInput(c3_DemoState const* demoState){
 			else {
 				//Cast to a char* to send the struct as a packet
 				demoState->peer->Send((char*)& send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+				
 			}
 		}
 		//Otherwise check command
@@ -156,9 +155,22 @@ void c3demoInput(c3_DemoState const* demoState){
 					DisplayCommandsChat();
 				}
 			}
-			else if (input[1] == 'g' || input[1] == 'G')//Game Move.  Make a move in game
+			else if (input[1] == 'g' || input[1] == 'G')//Start Game (Host only)
 			{
-				//Game move
+				printf("Who would you like to play the game?");
+
+
+
+
+				printf("What Game would you like to play? (B)attleship or (T)ic-Tac-Toe");
+				if (demoState->str[0] == 'T')//If host chose tic tac toe
+				{
+					//Start Tic tac toe game
+				}
+				else
+				{
+					//Start Battleship
+				}
 				
 			}
 			else if (input[1] == 'w' || input[1] == 'W')//Private message
@@ -226,6 +238,11 @@ void c3demoInput(c3_DemoState const* demoState){
 
 void c3demoNetworkingSend(c3_DemoState const* demoState) {
 	//Send packets out here
+
+
+
+
+
 
 
 }
