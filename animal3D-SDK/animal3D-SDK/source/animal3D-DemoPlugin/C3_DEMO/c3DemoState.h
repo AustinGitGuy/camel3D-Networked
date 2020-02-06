@@ -6,8 +6,15 @@
 #include "Raknet/BitStream.h"
 #include "Raknet/RakNetTypes.h"
 
+#include "A3_DEMO/a3_Networking/a3_Networking_gs_tictactoe.c"//TicTacToe file
+#include "A3_DEMO/a3_Networking/a3_Networking_gs_tictactoe.c"//BattleShip file
+
 enum GameMessages {
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE, ID_GAME_MOVE
+};
+
+enum UserGameState {
+	PLAYER_ACTIVE, PLAYER_INACTIVE, SPECTATOR, LOBBY
 };
 
 const unsigned int MAXCLIENTS = 10;
@@ -25,6 +32,7 @@ struct MsgStruct {
 struct UserProfile {
 	RakNet::SystemAddress address;
 	char name[127];
+	UserGameState playState;
 	bool isHost;
 };
 #pragma pack(pop)
@@ -107,6 +115,7 @@ typedef struct c3_DemoState					c3_DemoState;
 		UserProfile profile; //This is for the server (if we are client)
 		ProfileList* clientProfiles;
 		bool isServer;
+		bool gameTrue;
 		bool programTrue = true;//Used to reset back to lobby
 
 		//-----------------------------------
