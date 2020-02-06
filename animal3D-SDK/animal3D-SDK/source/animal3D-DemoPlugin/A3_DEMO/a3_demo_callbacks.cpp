@@ -181,6 +181,8 @@ A3DYLIBSYMBOL c3_DemoState *a3demoCB_load(c3_DemoState *demoState, a3boolean hot
 
 		a3trigInitSetTables(trigSamplesPerDegree, demoState->trigTable);
 
+		demoState->peer = RakNet::RakPeerInterface::GetInstance();
+
 		// call refresh to re-link pointers in case demo state address changed
 		//a3demo_refresh(demoState);
 		//a3demo_initSceneRefresh(demoState);
@@ -295,11 +297,10 @@ A3DYLIBSYMBOL a3i32 a3demoCB_idle(c3_DemoState *demoState)
 			//a3demo_update(demoState, demoState->renderTimer->secondsPerTick);
 			//a3demo_input(demoState, demoState->renderTimer->secondsPerTick);
 			//a3demo_render(demoState);
-
-			c3demoInput(demoState);
+			
 			c3demoUpdate(demoState);
 			c3demoRender(demoState);
-
+			
 			// update input
 			a3mouseUpdate(demoState->mouse);
 			a3keyboardUpdate(demoState->keyboard);
@@ -318,14 +319,14 @@ A3DYLIBSYMBOL a3i32 a3demoCB_idle(c3_DemoState *demoState)
 }
 
 // window gains focus
-A3DYLIBSYMBOL void a3demoCB_windowActivate(c3_DemoState *demoState)
+A3DYLIBSYMBOL void a3demoCB_windowActivate(c3_DemoState* demoState)
 {
 	// nothing really needs to be done here...
 	//	but it's here just in case
 }
 
 // window loses focus
-A3DYLIBSYMBOL void a3demoCB_windowDeactivate(c3_DemoState *demoState)
+A3DYLIBSYMBOL void a3demoCB_windowDeactivate(c3_DemoState* demoState)
 {
 	// reset input; it won't track events if the window is inactive, 
 	//	active controls will freeze and you'll get strange behaviors
@@ -336,13 +337,13 @@ A3DYLIBSYMBOL void a3demoCB_windowDeactivate(c3_DemoState *demoState)
 }
 
 // window moves
-A3DYLIBSYMBOL void a3demoCB_windowMove(c3_DemoState *demoState, a3i32 newWindowPosX, a3i32 newWindowPosY)
+A3DYLIBSYMBOL void a3demoCB_windowMove(c3_DemoState* demoState, a3i32 newWindowPosX, a3i32 newWindowPosY)
 {
 	// nothing needed here
 }
 
 // window resizes
-A3DYLIBSYMBOL void a3demoCB_windowResize(c3_DemoState *demoState, a3i32 newWindowWidth, a3i32 newWindowHeight)
+A3DYLIBSYMBOL void a3demoCB_windowResize(c3_DemoState* demoState, a3i32 newWindowWidth, a3i32 newWindowHeight)
 {
 	//a3ui32 i;
 	//a3_DemoCamera *camera;
@@ -384,7 +385,7 @@ A3DYLIBSYMBOL void a3demoCB_windowResize(c3_DemoState *demoState, a3i32 newWindo
 }
 
 // any key is pressed
-A3DYLIBSYMBOL void a3demoCB_keyPress(c3_DemoState *demoState, a3i32 virtualKey)
+A3DYLIBSYMBOL void a3demoCB_keyPress(c3_DemoState* demoState, a3i32 virtualKey)
 {
 	// persistent state update
 	a3keyboardSetState(demoState->keyboard, (a3_KeyboardKey)virtualKey, a3input_down);
@@ -415,6 +416,29 @@ A3DYLIBSYMBOL void a3demoCB_keyCharPress(c3_DemoState *demoState, a3i32 asciiKey
 //
 	// persistent state update
 	a3keyboardSetStateASCII(demoState->keyboard, (a3byte)asciiKey);
+
+	if(asciiKey == 8){
+		demoState->str[demoState->index] = '\0';
+		demoState->index--;
+		if(demoState->index <= 0){
+			demoState->index = 0;
+		}
+	}
+	else if(asciiKey == 13){
+		c3demoInput(demoState);
+		demoState->index = 0;
+		for (int i = 0; i < MAX_CHARACTERS; i++) {
+			demoState->str[i] = '\0';
+		}
+	}
+	else {
+		if (demoState->index >= MAX_CHARACTERS) {
+			demoState->index = MAX_CHARACTERS - 1;
+		}
+		demoState->str[demoState->index] = asciiKey;
+		demoState->index++;
+	}
+	
 //
 //	// handle special cases immediately
 //	switch (asciiKey)

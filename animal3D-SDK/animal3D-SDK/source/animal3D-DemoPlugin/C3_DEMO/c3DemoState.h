@@ -42,9 +42,6 @@ struct ProfileList {
 	int iter = 0;
 };
 
-void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, MsgStruct msg, int client);
-
-
 #ifndef __CAMEL3D_DEMOSTATE_H
 #define __CAMEL3D_DEMOSTATE_H
 
@@ -54,6 +51,8 @@ extern "C"
 #else	// !__cplusplus
 typedef struct c3_DemoState					c3_DemoState;
 #endif	// __cplusplus
+
+const int MAX_CHARACTERS = 127;
 
 	struct c3_DemoState
 	{
@@ -108,15 +107,16 @@ typedef struct c3_DemoState					c3_DemoState;
 
 		//------------------------------
 		//Camel3D Stuff
-		char str[127];
+		char str[MAX_CHARACTERS];
+		int index = 0;
 		unsigned short serverPort = 60000;
-		//RakNet::RakPeerInterface* peer = RakNet::RakPeerInterface::GetInstance();
 		RakNet::Packet* packet;
 		UserProfile profile; //This is for the server (if we are client)
 		ProfileList* clientProfiles;
 		bool isServer;
 		bool gameTrue;
 		bool programTrue = true;//Used to reset back to lobby
+		bool inGame = false;
 
 		//-----------------------------------
 		//Game Stuff
@@ -136,6 +136,7 @@ typedef struct c3_DemoState					c3_DemoState;
 
 	void c3demoNetworkingRecieveNonConst(c3_DemoState* demoState);
 
+	void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, MsgStruct msg, int client);
 
 #ifdef __cplusplus
 }

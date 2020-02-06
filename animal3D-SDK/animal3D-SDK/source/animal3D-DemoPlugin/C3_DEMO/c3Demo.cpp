@@ -83,8 +83,13 @@ void c3demoRender(c3_DemoState const* demoState) {
 	//Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	//Draw some text
-	a3textDraw(demoState->text, 0, 0, -1, 1, 1, 1, 1, "Total time: %f", demoState->renderTimer->totalTime);
+	if(demoState->inGame){
+		//Draw the chatroom if we are in
+		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Chat: %s", demoState->str);
+	}
+	else {
+
+	}
 }
 
 void c3demoUpdate(c3_DemoState const* demoState) {
@@ -385,7 +390,7 @@ void c3demoNetworkingRecieve(c3_DemoState const* demoState) {
 	
 }
 
-void c3demoNetworkingRecieveNonConst(c3_DemoState* demoState) {
+void c3demoNetworkingRecieveNonConst(c3_DemoState* demoState){
 
 	bool running = true;
 
@@ -413,7 +418,6 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 	//system("CLS");
 	a3_TextRenderer texRend;
 
-	
 	//a3textDraw(texRend.handle)
 	printf("C to connect to a chat room or H to host a chat room or Q to quit the program\n");
 	fgets(demoState->str, 127, stdin);
