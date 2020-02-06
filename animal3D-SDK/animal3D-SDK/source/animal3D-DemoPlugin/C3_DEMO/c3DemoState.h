@@ -106,9 +106,12 @@ const int MAX_CHARACTERS = 127;
 		UserProfile profile; //This is for the server (if we are client)
 		ProfileList* clientProfiles;
 		bool isServer;
-		bool running = true;
 		bool programTrue = true;//Used to reset back to lobby
 		bool inGame = false;
+
+		//-----------------------------------
+		//Game Stuff
+		
 
 	};
 
