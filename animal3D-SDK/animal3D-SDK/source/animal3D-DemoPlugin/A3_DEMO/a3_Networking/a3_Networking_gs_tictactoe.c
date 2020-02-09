@@ -36,6 +36,9 @@
 #define GS_TICTACTOE_BOARD_WIDTH				3
 #define GS_TICTACTOE_BOARD_HEIGHT				3
 
+#ifndef TTT
+#define TTT
+
 enum gs_tictactoe_space_state
 {
 	// invalid space state
@@ -55,8 +58,8 @@ typedef		unsigned char						gs_tictactoe_index;
 typedef		gs_tictactoe_space_state			gs_tictactoe[GS_TICTACTOE_BOARD_WIDTH][GS_TICTACTOE_BOARD_HEIGHT];
 
 
-#define	GS_VALIDATE_COORDINATE(x,y,w,h)			(x < w && y < h)
-#define GS_TICTACTOE_VALID(x,y)					GS_VALIDATE_COORDINATE(x,y,GS_TICTACTOE_BOARD_WIDTH,GS_TICTACTOE_BOARD_HEIGHT)
+#define	TTT_VALIDATE_COORDINATE(x,y,w,h)			(x < w && y < h)
+#define GS_TICTACTOE_VALID(x,y)					TTT_VALIDATE_COORDINATE(x,y,GS_TICTACTOE_BOARD_WIDTH,GS_TICTACTOE_BOARD_HEIGHT)
 
 
 inline gs_tictactoe_space_state gs_tictactoe_getSpaceState(gs_tictactoe const game, gs_tictactoe_index const xpos, gs_tictactoe_index const ypos)
@@ -87,7 +90,7 @@ inline gs_tictactoe_index gs_tictactoe_reset(gs_tictactoe game)
 //-----------------------------------------------------------------------------
 // DEFINITIONS
 
-int launchTicTacToe()
+inline int launchTicTacToe()
 {
 	gs_tictactoe game = { 0 };
 
@@ -97,6 +100,8 @@ int launchTicTacToe()
 
 	return 0;
 }
+
+#endif
 
 
 //-----------------------------------------------------------------------------

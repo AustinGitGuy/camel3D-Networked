@@ -7,7 +7,7 @@
 #include "Raknet/RakNetTypes.h"
 
 #include "A3_DEMO/a3_Networking/a3_Networking_gs_tictactoe.c"//TicTacToe file
-#include "A3_DEMO/a3_Networking/a3_Networking_gs_tictactoe.c"//BattleShip file
+#include "A3_DEMO/a3_Networking/a3_Networking_gs_battleship.c"//BattleShip file
 
 enum GameMessages {
 	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE, ID_GAME_MOVE

@@ -78,17 +78,6 @@ void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfi
 	}
 }
 
-void c3demoRender(c3_DemoState const* demoState) {
-
-	//Clear the screen
-
-	if(demoState->inGame){
-		//Draw the chatroom if we are in
-		glClear(GL_COLOR_BUFFER_BIT);
-		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Chat: %s", demoState->str);
-	}
-}
-
 void c3demoUpdate(c3_DemoState const* demoState) {
 	//Game loop goes here
 	
@@ -410,6 +399,35 @@ void c3demoNetworkingRecieveNonConst(c3_DemoState* demoState){
 	}
 }
 
+
+void c3demoRender(c3_DemoState const* demoState){
+
+	//Clear the screen
+
+	if (demoState->inGame) {
+		//Draw the chatroom if we are in
+		glClear(GL_COLOR_BUFFER_BIT);
+		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Chat: %s", demoState->str);
+	}
+	else if(demoState->lobbyStage == 0){
+		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "C to connect, H to host, Q to quit: %s", demoState->str);
+	}
+	else if(demoState->lobbyStage == 1){
+		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: ");
+	}
+	else if(demoState->lobbyStage == 2){
+		if(demoState->isServer){
+			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "What Game would you like to play? (B)attleship or (T)ic-Tac-Toe: %s", demoState->str);
+		}
+		else {
+			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: %s", demoState->str);
+		}
+	}
+	else if(demoState->lobbyStage == 4){
+		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter your user name: %s", demoState->str);
+	}
+}
+
 void c3demoNetworkingLobby(c3_DemoState* demoState) 
 {
 	//system("CLS");
@@ -419,7 +437,7 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 	if(demoState->lobbyStage == -1){
 		printf("Lobby called when it shouldn't have!\n");
 	}
-	else if(demoState->lobbyStage == 0) {
+	else if(demoState->lobbyStage == 0){
 		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "C to connect, H to host, Q to quit: %s", demoState->str);
 		return;
 	}

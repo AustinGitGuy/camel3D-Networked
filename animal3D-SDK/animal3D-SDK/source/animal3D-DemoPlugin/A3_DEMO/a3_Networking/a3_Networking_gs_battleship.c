@@ -36,6 +36,9 @@
 #define GS_BATTLESHIP_BOARD_WIDTH			10
 #define GS_BATTLESHIP_BOARD_HEIGHT			10
 
+#ifndef Battleship
+#define Battleship
+
 enum gs_battleship_space_state
 {
 	// invalid space state
@@ -95,7 +98,7 @@ inline gs_battleship_index gs_battleship_reset(gs_battleship game)
 //-----------------------------------------------------------------------------
 // DEFINITIONS
 
-int launchBattleship()
+inline int launchBattleship()
 {
 	gs_battleship game = { 0 };
 
@@ -106,5 +109,6 @@ int launchBattleship()
 	return 0;
 }
 
+#endif //Battleship
 
 //-----------------------------------------------------------------------------

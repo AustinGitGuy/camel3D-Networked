@@ -61,6 +61,9 @@
     <Filter Include="Source Files\common\A3_DEMO\a3_Networking">
       <UniqueIdentifier>{7cd1e83b-1cfa-4949-86a4-d5e0bf1c265a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\common\C3_DEMO">
+      <UniqueIdentifier>{c06489cf-9f57-4642-ace5-2737c3bef9e9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="_src_win\main_dll.c">
@@ -87,6 +90,9 @@
     <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\A3_DEMO\a3_DemoState\a3_DemoState_loading.c">
       <Filter>Source Files\common\A3_DEMO\a3_DemoState</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\A3_DEMO\a3_DemoState\a3_DemoState_unloading.c">
+      <Filter>Source Files\common\A3_DEMO\a3_DemoState</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\A3_DEMO\a3_demo_callbacks.cpp">
       <Filter>Source Files\common\A3_DEMO</Filter>
     </ClCompile>
@@ -103,10 +109,7 @@
       <Filter>Source Files\common\A3_DEMO\a3_Networking</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3Demo.cpp">
-      <Filter>Source Files\common\A3_DEMO</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\A3_DEMO\a3_DemoState\a3_DemoState_unloading.c">
-      <Filter>Source Files\common\A3_DEMO\a3_DemoState</Filter>
+      <Filter>Source Files\common\C3_DEMO</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -126,7 +129,7 @@
       <Filter>Header Files\A3_DEMO\_utilities</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3DemoState.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\common\C3_DEMO</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
