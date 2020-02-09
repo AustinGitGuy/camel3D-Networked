@@ -48,6 +48,15 @@ struct GameMove {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
+struct BattleshipReturnPacket {
+	unsigned char id;
+	char senderName[127];
+	char receiveName[127];
+	bool didHit;
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
 struct UserProfile {
 	RakNet::SystemAddress address;
 	char name[127];
@@ -148,7 +157,8 @@ const int MAX_CHARACTERS = 127;
 		//-----------------------------------
 		//Game Stuff
 		gs_tictactoe tttGame;
-		gs_battleship battleGame;
+		gs_battleship battleGameLocal;//Local Player's board
+		gs_battleship battleGameEnemy;
 
 		bool isTTT = false;
 		bool isPlayer1 = false;

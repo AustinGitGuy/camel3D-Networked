@@ -50,15 +50,15 @@ void PrintBoardToConsole(c3_DemoState* demoState)
 			temp += "|";
 			for (int j = 0; j < GS_BATTLESHIP_BOARD_WIDTH; j++)
 			{
-				if (gs_checkers_getSpaceState(demoState->battleGame, demoState->isPlayer1, i, j)  == gs_battleship_space_hit)
+				if (gs_checkers_getSpaceState(demoState->battleGameLocal, demoState->isPlayer1, i, j)  == gs_battleship_space_hit)
 				{
 					temp += "H|";
 				}
-				else if (gs_checkers_getSpaceState(demoState->battleGame, demoState->isPlayer1, i, j) == gs_battleship_space_miss)
+				else if (gs_checkers_getSpaceState(demoState->battleGameLocal, demoState->isPlayer1, i, j) == gs_battleship_space_miss)
 				{
 					temp += "M|";
 				}
-				else if (gs_checkers_getSpaceState(demoState->battleGame, demoState->isPlayer1, i, j) == gs_battleship_space_open)
+				else if (gs_checkers_getSpaceState(demoState->battleGameLocal, demoState->isPlayer1, i, j) == gs_battleship_space_open)
 				{
 					temp += " |";
 				}
@@ -117,6 +117,19 @@ void DisplayAllCommands()
 	{
 		DisplayCommandsBattleship();
 	}
+}
+
+//Take sin position and outputs whether it hit on the battlship board local to this instance
+bool CheckBattlshipHit(c3_DemoState* demoState, char xPos, char yPos) 
+{
+	bool temp = false;
+	//If the coordinates hit anything, but an open space return true (returning true should mean it is a ship))
+	if (gs_checkers_getSpaceState(demoState->battleGameLocal, 1, xPos,yPos) != gs_battleship_space_open)
+	{
+		temp = true;
+	}
+
+	return temp;
 }
 
 void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, MsgStruct msg, int client = -1) {
@@ -474,6 +487,14 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			}
 			if (read->currentGame == BATTLESHIP)
 			{
+				BattleshipReturnPacket send;
+
+				send.id = (RakNet::MessageID)ID_GAME_MOVE;
+				send.didHit = CheckBattlshipHit(demoState, *read->xPos, *read->yPos);//If coordinate hits a ship return true
+
+				//Update Local Board to reflect hit or miss
+
+				demoState->peer->Send((char*)& send, sizeof(BattleshipReturnPacket), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);//Send packet telling other player whether they hit or not
 
 			}
 
@@ -607,7 +628,8 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 			else
 			{
 				//Start Battleship
-				gs_battleship_reset(demoState->battleGame);
+				gs_battleship_reset(demoState->battleGameLocal);
+				gs_battleship_reset(demoState->battleGameEnemy);
 				demoState->isTTT = false;
 				demoState->isPlayer1 = true;
 			}
