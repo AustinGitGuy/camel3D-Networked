@@ -86,7 +86,7 @@ void c3demoUpdate(c3_DemoState const* demoState) {
 }
 
 void c3demoInput(c3_DemoState* demoState){
-	//Grab keybaord input and send appriotrate command based on them
+	//Grab keybaord input and send appropriate command based on them
 
 	char input[127];
 	strcpy(input, demoState->str);
@@ -140,8 +140,7 @@ void c3demoInput(c3_DemoState* demoState){
 			}
 			else if (input[1] == 'g' || input[1] == 'G')//Start Game (Host only)
 			{
-				bool player1 = false;//temporary bool for telling who is who
-
+				
 				GameMove send;
 				char* trash;
 				char* posX;
@@ -160,7 +159,7 @@ void c3demoInput(c3_DemoState* demoState){
 
 					send.currentGame = TIC_TAC_TOE;
 
-					if (player1 == true)//If the player making this move is xPlayer place an x on that tile
+					if (demoState->isPlayer1 == true)//If the player making this move && is X Player place an x on that tile
 					{
 						//Update local game & tell if space is occupied
 						if (gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_x, *posX, *posY) == gs_tictactoe_space_invalid)
@@ -391,8 +390,15 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 
 			if (read->currentGame == TIC_TAC_TOE)
 			{
-				gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_o, *read->xPos, *read->yPos);
-
+				if (demoState->isPlayer1 == true)//If this is player 1(X Player)
+				{
+					gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_o, *read->xPos, *read->yPos);//Updates local game with opponent's move
+				}
+				else//If this is player 2(O Player)
+				{
+					gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_x, *read->xPos, *read->yPos);//Updates local game with opponent's move
+				}
+				
 			}
 			if (read->currentGame == BATTLESHIP)
 			{
@@ -468,8 +474,6 @@ void c3demoRender(c3_DemoState const* demoState){
 
 void c3demoNetworkingLobby(c3_DemoState* demoState) 
 {
-	//system("CLS");
-
 	glClear(GL_COLOR_BUFFER_BIT);
 	printf("Lobby stage: %i\n", demoState->lobbyStage);
 	if(demoState->lobbyStage == -1){
@@ -515,6 +519,7 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 				//Start Tic tac toe game
 				gs_tictactoe_reset(demoState->tttGame);
 				demoState->isTTT = true;
+				demoState->isPlayer1 = true;
 			}
 			else
 			{

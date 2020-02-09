@@ -146,8 +146,9 @@ const int MAX_CHARACTERS = 127;
 		//Game Stuff
 		gs_tictactoe tttGame;
 		gs_battleship battleGame;
-		
+
 		bool isTTT = false;
+		bool isPlayer1;
 
 	};
 
