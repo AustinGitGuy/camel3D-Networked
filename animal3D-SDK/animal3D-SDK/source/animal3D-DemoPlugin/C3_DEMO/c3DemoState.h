@@ -9,6 +9,9 @@
 #include <vector>
 #include <string>
 
+#include "A3_DEMO/a3_Networking/a3_Networking_gs_tictactoe.c"
+#include "A3_DEMO/a3_Networking/a3_Networking_gs_battleship.c"
+
 enum GameMessages {
 	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE, ID_GAME_MOVE
 };
@@ -25,6 +28,16 @@ struct MsgStruct {
 	char senderName[127];
 	char receiveName[127];
 	char msg[127];
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct GameMove {
+	unsigned char id;
+	char senderName[127];
+	char receiveName[127];
+	int xPos[127];
+	int yPos[127];
 };
 #pragma pack(pop)
 
@@ -124,7 +137,10 @@ const int MAX_CHARACTERS = 127;
 
 		//-----------------------------------
 		//Game Stuff
+		gs_tictactoe tttGame;
+		gs_battleship battleGame;
 		
+		bool isTTT = false;
 
 	};
 
