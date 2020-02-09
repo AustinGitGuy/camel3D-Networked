@@ -338,6 +338,14 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			strcpy(demoState->clientProfiles.profiles[demoState->clientProfiles.iter].name, read->msg);
 			demoState->clientProfiles.profiles[demoState->clientProfiles.iter].address = packet->systemAddress;
 
+			if(strcmp(read->msg, demoState->user) == 0){
+				MsgStruct send;
+				send.id = (RakNet::MessageID)ID_INVITE;
+				strcpy(send.msg, "ServerInvite");
+
+				SendToClient(demoState->peer, &demoState->clientProfiles, send, demoState->clientProfiles.iter);
+			}
+
 			demoState->chatLog.push_back("Client connected with name " + (std::string)demoState->clientProfiles.profiles[demoState->clientProfiles.iter].name);
 			demoState->clientProfiles.iter++;
 			break;
@@ -404,8 +412,13 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			{
 
 			}
-
+			break;
 		}
+		case ID_INVITE:
+			demoState->chatLog.push_back("You are playing the game.");
+			demoState->playingGame = true;
+
+			break;
 		default:
 			printf("Message with identifier %i has arrived.\n", packet->data[0]);
 			break;
@@ -468,7 +481,12 @@ void c3demoRender(c3_DemoState const* demoState){
 		}
 	}
 	else if(demoState->lobbyStage == 4){
-		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter your user name: %s", demoState->str);
+		if(demoState->isServer){
+			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter the username of the person who will play with you: %s", demoState->str);
+		}
+		else {
+			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter your user name: %s", demoState->str);
+		}
 	}
 }
 
@@ -528,13 +546,8 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 				demoState->isTTT = false;
 			}
 
-			// We need to let the server accept incoming connections from the clients
-			demoState->peer->SetMaximumIncomingConnections(MAXCLIENTS);
-
-			//TODO: Queue this onto the text stack
-			demoState->chatLog.push_back("Starting the server");
-			demoState->inGame = true;
-			demoState->lobbyStage = -1;
+			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter the username of the person who will play with you: ");
+			demoState->lobbyStage++;
 		}
 		else {
 			//If client: get the ip and the username, then start the client
@@ -549,18 +562,35 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 		}
 	}
 	else if(demoState->lobbyStage == 4){
-		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter your user name: %s", demoState->str);
+		if(demoState->isServer){
+			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter the username of the person who will play with you: %s", demoState->str);
+		}
+		else {
+			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter your user name: %s", demoState->str);
+		}
 		return;
 	}
 	else if(demoState->lobbyStage == 5){
-		if(demoState->index == 0){
-			strcpy(demoState->str, "Blank");
-		}
-		strcpy(demoState->clientProfiles.profiles[0].name, demoState->str);
+		if(demoState->isServer){
+			strcpy(demoState->user, demoState->str);
 
-		demoState->chatLog.push_back("Starting the client");
-		demoState->peer->Connect(demoState->ip, 60000, 0, 0);
-		demoState->inGame = true;
-		demoState->lobbyStage = -1;
+			// We need to let the server accept incoming connections from the clients
+			demoState->peer->SetMaximumIncomingConnections(MAXCLIENTS);
+
+			demoState->chatLog.push_back("Starting the server");
+			demoState->inGame = true;
+			demoState->lobbyStage = -1;
+		}
+		else {
+			if (demoState->index == 0) {
+				strcpy(demoState->str, "Blank");
+			}
+			strcpy(demoState->clientProfiles.profiles[0].name, demoState->str);
+
+			demoState->chatLog.push_back("Starting the client");
+			demoState->peer->Connect(demoState->ip, 60000, 0, 0);
+			demoState->inGame = true;
+			demoState->lobbyStage = -1;
+		}
 	}
 }

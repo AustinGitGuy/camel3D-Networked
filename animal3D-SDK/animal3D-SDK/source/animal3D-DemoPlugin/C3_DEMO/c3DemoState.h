@@ -13,7 +13,7 @@
 #include "A3_DEMO/a3_Networking/a3_Networking_gs_battleship.c"
 
 enum GameMessages {
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE, ID_GAME_MOVE
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE, ID_GAME_MOVE, ID_INVITE
 };
 
 enum UserGameState {
@@ -129,6 +129,7 @@ const int MAX_CHARACTERS = 127;
 		//Camel3D Stuff
 		char str[MAX_CHARACTERS];
 		char ip[MAX_CHARACTERS];
+		char user[MAX_CHARACTERS];
 		int index = 0;
 		unsigned short serverPort = 60000;
 		RakNet::Packet* packet;
@@ -139,6 +140,8 @@ const int MAX_CHARACTERS = 127;
 		bool programTrue = true;//Used to reset back to lobby
 		bool inGame = false;
 		int lobbyStage = 0;
+
+		bool playingGame = false;
 
 		std::vector<std::string> chatLog;
 
