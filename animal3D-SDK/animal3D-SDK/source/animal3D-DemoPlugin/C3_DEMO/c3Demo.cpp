@@ -15,6 +15,41 @@ void PrintClientList(const ProfileList* clientProfiles)
 	}
 }
 
+void PrintBoardToConsole(c3_DemoState* demoState)
+{
+	std::string temp;
+	if (demoState->isTTT)//if game is TTT
+	{
+		
+		for (int i = 0; i < GS_TICTACTOE_BOARD_HEIGHT; i++)//Rows
+		{
+			temp += "|";
+			for (int j = 0; j < GS_TICTACTOE_BOARD_WIDTH; j++)//content of rows
+			{
+				if (gs_tictactoe_getSpaceState(demoState->tttGame, i, j) == gs_tictactoe_space_x)//If space is occupied by an x
+				{
+					temp += "X|";
+				}
+				else if (gs_tictactoe_getSpaceState(demoState->tttGame, i, j) == gs_tictactoe_space_o)//If space is occupied by an o
+				{
+					temp += "O|";
+				}
+				else if (gs_tictactoe_getSpaceState(demoState->tttGame, i, j) == gs_tictactoe_space_open)//If space is occupied by nothing
+				{
+					temp += " |";
+				}
+			}
+			temp += "\n";
+		}
+	}
+	else
+	{
+
+	}
+	
+	demoState->chatLog.push_back(temp);//Put board into cha log to be displayed
+}
+
 //Below Fucntion is used to display all available commands for tic-tac-toe
 void DisplayCommandsChat()
 {
@@ -177,6 +212,7 @@ void c3demoInput(c3_DemoState* demoState){
 					}
 
 					demoState->peer->Send((char*)& send, sizeof(GameMove), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);//Send out move to other player
+					PrintBoardToConsole(demoState);
 				}
 				else if(input[2] == 'B' && demoState->isTTT == false)//Make move for Battleship game
 				{
@@ -407,17 +443,19 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 					gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_x, *read->xPos, *read->yPos);//Updates local game with opponent's move
 				}
 				
+				PrintBoardToConsole(demoState);
 			}
 			if (read->currentGame == BATTLESHIP)
 			{
 
 			}
+
+			
 			break;
 		}
 		case ID_INVITE:
 			demoState->chatLog.push_back("You are playing the game.");
 			demoState->playingGame = true;
-
 			break;
 		default:
 			printf("Message with identifier %i has arrived.\n", packet->data[0]);
@@ -544,6 +582,7 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 				//Start Battleship
 				gs_battleship_reset(demoState->battleGame);
 				demoState->isTTT = false;
+				demoState->isPlayer1 = true;
 			}
 
 			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter the username of the person who will play with you: ");

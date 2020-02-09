@@ -151,7 +151,7 @@ const int MAX_CHARACTERS = 127;
 		gs_battleship battleGame;
 
 		bool isTTT = false;
-		bool isPlayer1;
+		bool isPlayer1 = false;
 
 	};
 
