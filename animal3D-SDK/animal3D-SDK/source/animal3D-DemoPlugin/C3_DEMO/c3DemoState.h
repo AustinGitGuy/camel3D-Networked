@@ -136,7 +136,7 @@ const int MAX_CHARACTERS = 127;
 
 	void c3demoNetworkingSend(c3_DemoState const* demoState);
 
-	void c3demoNetworkingRecieve(c3_DemoState const* demoState);
+	void c3demoNetworkingRecieve(c3_DemoState* demoState);
 
 	void c3demoNetworkingRecieveNonConst(c3_DemoState* demoState);
 

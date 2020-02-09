@@ -309,6 +309,7 @@ A3DYLIBSYMBOL a3i32 a3demoCB_idle(c3_DemoState *demoState)
 			a3mouseUpdate(demoState->mouse);
 			a3keyboardUpdate(demoState->keyboard);
 			a3XboxControlUpdate(demoState->xcontrol);
+			c3demoNetworkingRecieve(demoState);
 
 			// render occurred this idle: return +1
 			return +1;

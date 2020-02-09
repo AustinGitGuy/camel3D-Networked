@@ -95,30 +95,30 @@ void c3demoInput(c3_DemoState* demoState){
 	if(input[0] != '\n'){
 		//Check if a command is not typed
 		if(input[0] != '/'){
-			char tmp[127];
+			char tmp[MAX_CHARACTERS + 20];
 			MsgStruct send;
 
 			if(demoState->isServer){
-				strcpy(tmp, "Server: ");//Appends Server to Beginning of Message
+				strcpy(send.senderName, "Server");
 			}
 			else {
-				strcpy(send.senderName, demoState->clientProfiles.profiles[0].name);//Appends Cilent Username to Beginning of Message
+				strcpy(send.senderName, demoState->clientProfiles.profiles[0].name); //Appends Cilent Username to Beginning of Message
 			}
 
-			strcat(tmp, ": (Public) ");//Appends a notification that Message is public
+			strcpy(tmp, " (Public): ");
+			strcat(tmp, input);//Appends a notification that Message is public
 
 			send.id = (RakNet::MessageID)ID_GAME_MESSAGE_1;
-			strcpy(send.msg, strcpy(tmp, input));
 
-			demoState->chatLog.push_back(std::string(send.msg));
+			strcpy(send.msg, tmp);
 
-			if (demoState->isServer) {
+			if(demoState->isServer){
 				SendToClient(demoState->peer, &demoState->clientProfiles, send);
+				demoState->chatLog.push_back(std::string(send.senderName) + std::string(send.msg));
 			}
 			else {
 				//Cast to a char* to send the struct as a packet
 				demoState->peer->Send((char*)& send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
-				
 			}
 		}
 		//Otherwise check command
@@ -170,18 +170,18 @@ void c3demoInput(c3_DemoState* demoState){
 				char tmp[127];
 
 				if (demoState->isServer) {
-					strcpy(tmp, "Server: ");//Appends Server to Beginning of Message
+					strcpy(send.senderName, "Server: ");//Appends Server to Beginning of Message
 				}
 				else {
-					strcpy(send.senderName, demoState->clientProfiles.profiles[0].name);//Appends Client Username to Beginning of Message
+					strcpy(send.senderName, demoState->clientProfiles.profiles[0].name); //Appends Client Username to Beginning of Message
 				}
 
-				strcpy(tmp, ": (Whisper) ");//Appends a notification that Message is private
+				strcpy(tmp, " (Whisper): ");//Appends a notification that Message is private
 
 
 				send.id = (RakNet::MessageID)ID_GAME_MESSAGE_PRIVATE;
 				strcpy(send.receiveName, trash);//Setting who is receiving the message
-				//strcpy(send.senderName, clientProfiles.profiles[0].name); //setting who is sending the message
+
 				trash = strtok(NULL, " ");
 				strcpy(send.msg, strcat(tmp, trash));
 
@@ -237,9 +237,9 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 	RakNet::Packet* packet;
 
 	for (packet = demoState->peer->Receive(); packet; demoState->peer->DeallocatePacket(packet), packet = demoState->peer->Receive()) {
-		switch (packet->data[0]) {
+		switch(packet->data[0]){
 		case ID_REMOTE_DISCONNECTION_NOTIFICATION:
-			printf("Another client has disconnected.\n");
+			demoState->chatLog.push_back("Another client has disconnected.");
 			//When a client has disconnected display message saying they have left
 			MsgStruct send;
 			send.id = (RakNet::MessageID)ID_NAME_LEAVE;
@@ -249,13 +249,13 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			demoState->peer->Send((char*)&send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			break;
 		case ID_REMOTE_CONNECTION_LOST:
-			printf("Another client has lost the connection.\n");
+			demoState->chatLog.push_back("Another client has lost the connection.");
 			break;
 		case ID_REMOTE_NEW_INCOMING_CONNECTION:
-			printf("Another client has connected.\n");
+			demoState->chatLog.push_back("Another client has connected.");
 			break;
 		case ID_CONNECTION_REQUEST_ACCEPTED: {
-			printf("Our connection request has been accepted.\n");
+			demoState->chatLog.push_back("Our connection request has been accepted.");
 
 			// Use a struct to send the id of the game
 			MsgStruct send;
@@ -265,30 +265,31 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			//Cast to a char* to send the struct as a packet
 			demoState->peer->Send((char*)&send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 
-
+			demoState->profile.address = packet->systemAddress;
+			demoState->profile.isHost = true;
 			break;
 		}
 		case ID_NEW_INCOMING_CONNECTION:
-			printf("A connection is incoming.\n");
+			demoState->chatLog.push_back("A connection is incoming.");
 			break;
 		case ID_NO_FREE_INCOMING_CONNECTIONS:
-			printf("The server is full.\n");
+			demoState->chatLog.push_back("The server is full.");
 			break;
 		case ID_DISCONNECTION_NOTIFICATION:
 			if (demoState->isServer) {
-				printf("A client has disconnected.\n");
+				demoState->chatLog.push_back("A client has disconnected.");
 
 			}
 			else {
-				printf("We have been disconnected.\n");
+				demoState->chatLog.push_back("We have been disconnected.");
 			}
 
 		case ID_CONNECTION_LOST:
 			if (demoState->isServer) {
-				printf("A client lost the connection.\n");
+				demoState->chatLog.push_back("A client lost the connection.");
 			}
 			else {
-				printf("Connection lost.\n");
+				demoState->chatLog.push_back("Connection lost.");
 			}
 
 			break;
@@ -297,11 +298,10 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			//Cast it back to a struct to be read
 			MsgStruct* read = (MsgStruct*)packet->data;
 
-			printf("%s ", read->senderName);
-			printf("%s\n", read->msg);
+			demoState->chatLog.push_back((std::string)read->senderName + (std::string)read->msg);
 
 			//Message recieved
-			SendToClient(demoState->peer, &demoState->clientProfiles, *read);
+			if(demoState->isServer) SendToClient(demoState->peer, &demoState->clientProfiles, *read);
 			break;
 		}
 
@@ -313,7 +313,7 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			strcpy(demoState->clientProfiles.profiles[demoState->clientProfiles.iter].name, read->msg);
 			demoState->clientProfiles.profiles[demoState->clientProfiles.iter].address = packet->systemAddress;
 
-			printf("Client connected with name %s\n", demoState->clientProfiles.profiles[demoState->clientProfiles.iter].name);
+			demoState->chatLog.push_back("Client connected with name " + (std::string)demoState->clientProfiles.profiles[demoState->clientProfiles.iter].name);
 			demoState->clientProfiles.iter++;
 			break;
 		}
@@ -324,7 +324,7 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			MsgStruct* read = (MsgStruct*)packet->data;
 
 
-			printf("%s has disconnected\n", read->senderName);
+			demoState->chatLog.push_back((std::string)read->senderName + " has disconnected");
 			demoState->clientProfiles.iter--;
 			break;
 		}
@@ -352,9 +352,7 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			}
 			else
 			{
-				printf("%s ", read->senderName);
-				printf("%s", read->receiveName);
-				printf("%s\n", read->msg);
+				demoState->chatLog.push_back((std::string)read->senderName + " " + read->receiveName + " " + (std::string)read->msg);
 
 				//Message recieved
 				SendToClient(demoState->peer, &demoState->clientProfiles, *read, i);
