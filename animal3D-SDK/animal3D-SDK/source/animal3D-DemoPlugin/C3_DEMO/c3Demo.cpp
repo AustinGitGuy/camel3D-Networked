@@ -20,7 +20,7 @@ void PrintBoardToConsole(c3_DemoState* demoState)
 	std::string temp;
 	if (demoState->isTTT)//if game is TTT
 	{
-		
+		temp += " A B C \n";
 		for (int i = 0; i < GS_TICTACTOE_BOARD_HEIGHT; i++)//Rows
 		{
 			temp += "|";
@@ -42,12 +42,32 @@ void PrintBoardToConsole(c3_DemoState* demoState)
 			temp += "\n";
 		}
 	}
-	else
+	else//should write local coordinates for battlehsip to see where you've fired etc.****This might need to be addressed later ************
 	{
-
+		temp += " A B C D E F G H I J \n";//Display letter at top of baord for coordinates
+		for (int i = 0; i < GS_BATTLESHIP_BOARD_HEIGHT; i++)
+		{
+			temp += "|";
+			for (int j = 0; j < GS_BATTLESHIP_BOARD_WIDTH; j++)
+			{
+				if (gs_checkers_getSpaceState(demoState->battleGame, demoState->isPlayer1, i, j)  == gs_battleship_space_hit)
+				{
+					temp += "H|";
+				}
+				else if (gs_checkers_getSpaceState(demoState->battleGame, demoState->isPlayer1, i, j) == gs_battleship_space_miss)
+				{
+					temp += "M|";
+				}
+				else if (gs_checkers_getSpaceState(demoState->battleGame, demoState->isPlayer1, i, j) == gs_battleship_space_open)
+				{
+					temp += " |";
+				}
+			}
+			temp += "\n";
+		}
 	}
 	
-	demoState->chatLog.push_back(temp);//Put board into cha log to be displayed
+	demoState->chatLog.push_back(temp);//Put board into chat log to be displayed
 }
 
 //Below Fucntion is used to display all available commands for tic-tac-toe
@@ -216,7 +236,14 @@ void c3demoInput(c3_DemoState* demoState){
 				}
 				else if(input[2] == 'B' && demoState->isTTT == false)//Make move for Battleship game
 				{
-					
+					send.id = (RakNet::MessageID)ID_GAME_MOVE;
+					strcpy(send.xPos, posX);//Copy posX into Packet
+					strcpy(send.yPos, posY);//Copy posY into Packet
+
+					send.currentGame = BATTLESHIP;
+
+					demoState->peer->Send((char*)& send, sizeof(GameMove), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);//Send out move to other player
+					PrintBoardToConsole(demoState);
 				}
 				
 			}
