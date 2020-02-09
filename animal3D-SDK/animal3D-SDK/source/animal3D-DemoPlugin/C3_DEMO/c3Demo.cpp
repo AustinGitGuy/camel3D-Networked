@@ -49,51 +49,6 @@ void DisplayCommandsBattleship() {
 		"Type your message and press enter to send a public message\n");
 }
 
-//Translates Player move into Coordinates(char to int)
-int MoveTranslate(char input) 
-{
-	int temp = 0;
-
-	switch (input)
-	{
-		case 'A':
-			temp = 1;
-			break;
-		case 'B':
-			temp = 2;
-			break;
-		case 'C':
-			temp = 3;
-			break;
-		case 'D':
-			temp = 4;
-			break;
-		case 'E':
-			temp = 5;
-			break;
-		case 'F':
-			temp = 6;
-			break;
-		case 'G':
-			temp = 7;
-			break;
-		case 'H':
-			temp = 8;
-			break;
-		case 'I':
-			temp = 9;
-			break;
-		case 'J':
-			temp = 10;
-			break;
-		default:
-			printf("Position is out of game board");
-			break;
-	}
-
-	return temp - 1;
-}
-
 void DisplayAllCommands() 
 {
 	bool TTTtrue = true;
@@ -185,21 +140,44 @@ void c3demoInput(c3_DemoState* demoState){
 			}
 			else if (input[1] == 'g' || input[1] == 'G')//Start Game (Host only)
 			{
-				MsgStruct send;
-				char* trash;
+				bool player1 = false;//temporary bool for telling who is who
 
-				trash = strtok(input, " ");
-				trash = strtok(NULL, " ");
+				GameMove send;
+				char* trash;
+				char* posX;
+				char* posY;
+
+				//Get parts of command /gTTT A 1
+				trash = strtok(input, " ");//trash = /gTTT
+				posX = strtok(NULL, " ");//posX = A char
+				posY = strtok(NULL, " ");//posY = 1 char
 				
 				if (input[2] == 'T' && demoState->isTTT == true)//Make move for tic tac toe game
 				{
 					send.id = (RakNet::MessageID)ID_GAME_MOVE;
-					strcpy(send.receiveName, trash);//Setting who is receiving the message
+					strcpy(send.xPos, posX);//Copy posX into Packet
+					strcpy(send.yPos, posY);//Copy posY into Packet
 
+					send.currentGame = TIC_TAC_TOE;
 
-					gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_o, 0, 0);
+					if (player1 == true)//If the player making this move is xPlayer place an x on that tile
+					{
+						//Update local game & tell if space is occupied
+						if (gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_x, *posX, *posY) == gs_tictactoe_space_invalid)
+						{
+							printf("Space is currently occupied");
+						}
+					}
+					else
+					{
+						//Update local game & tell if space is occupied
+						if (gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_o, *posX, *posY) == gs_tictactoe_space_invalid)
+						{
+							printf("Space is currently occupied");
+						}
+					}
 
-					demoState->peer->Send((char*)& send, sizeof(GameMove), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+					demoState->peer->Send((char*)& send, sizeof(GameMove), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);//Send out move to other player
 				}
 				else if(input[2] == 'B' && demoState->isTTT == false)//Make move for Battleship game
 				{
@@ -406,6 +384,21 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 				SendToClient(demoState->peer, &demoState->clientProfiles, *read, i);
 				break;
 			}
+		}
+		case ID_GAME_MOVE: {//Receive game moves
+
+			GameMove* read = (GameMove*)packet->data;
+
+			if (read->currentGame == TIC_TAC_TOE)
+			{
+				gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_o, *read->xPos, *read->yPos);
+
+			}
+			if (read->currentGame == BATTLESHIP)
+			{
+
+			}
+
 		}
 		default:
 			printf("Message with identifier %i has arrived.\n", packet->data[0]);

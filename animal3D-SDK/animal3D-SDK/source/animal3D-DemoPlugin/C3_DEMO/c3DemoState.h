@@ -20,6 +20,11 @@ enum UserGameState {
 	PLAYER_ACTIVE, PLAYER_INACTIVE, SPECTATOR, LOBBY
 };
 
+enum ActiveGame{
+	TIC_TAC_TOE, BATTLESHIP
+
+};
+
 const unsigned int MAXCLIENTS = 10;
 
 #pragma pack(push, 1)
@@ -36,8 +41,9 @@ struct GameMove {
 	unsigned char id;
 	char senderName[127];
 	char receiveName[127];
-	int xPos[127];
-	int yPos[127];
+	ActiveGame currentGame;
+	char xPos[127];
+	char yPos[127];
 };
 #pragma pack(pop)
 
@@ -54,6 +60,7 @@ struct ProfileList {
 	UserProfile profiles[MAXCLIENTS];
 	int iter = 0;
 };
+
 
 #ifndef __CAMEL3D_DEMOSTATE_H
 #define __CAMEL3D_DEMOSTATE_H
