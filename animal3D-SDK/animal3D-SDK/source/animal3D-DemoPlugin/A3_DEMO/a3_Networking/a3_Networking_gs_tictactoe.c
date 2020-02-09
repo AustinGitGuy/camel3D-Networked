@@ -54,7 +54,7 @@ typedef		enum gs_tictactoe_space_state		gs_tictactoe_space_state;
 #endif	// !__cplusplus
 
 // tic-tac-toe game state
-typedef		unsigned char						gs_tictactoe_index;
+typedef		int						gs_tictactoe_index;
 typedef		gs_tictactoe_space_state			gs_tictactoe[GS_TICTACTOE_BOARD_WIDTH][GS_TICTACTOE_BOARD_HEIGHT];
 
 

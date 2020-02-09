@@ -42,8 +42,8 @@ struct GameMove {
 	char senderName[127];
 	char receiveName[127];
 	ActiveGame currentGame;
-	char xPos[127];
-	char yPos[127];
+	int xPos;
+	int yPos;
 };
 #pragma pack(pop)
 

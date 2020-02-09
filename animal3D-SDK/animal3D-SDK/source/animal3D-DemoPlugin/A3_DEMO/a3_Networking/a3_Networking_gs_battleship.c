@@ -61,7 +61,7 @@ typedef		enum gs_battleship_space_state	gs_battleship_space_state;
 #endif	// !__cplusplus
 
 // battleship game state
-typedef		unsigned char					gs_battleship_index;
+typedef		int					gs_battleship_index;
 typedef		gs_battleship_space_state		gs_battleship[GS_BATTLESHIP_PLAYERS][GS_BATTLESHIP_BOARD_WIDTH][GS_BATTLESHIP_BOARD_HEIGHT];
 
 

@@ -17,34 +17,38 @@ void PrintClientList(const ProfileList* clientProfiles)
 
 void PrintBoardToConsole(c3_DemoState* demoState)
 {
-	std::string temp;
+	std::string temp = "";
 	if (demoState->isTTT)//if game is TTT
 	{
-		temp += " A B C \n";
+		demoState->chatLog.push_back(" A B C ");
 		for (int i = 0; i < GS_TICTACTOE_BOARD_HEIGHT; i++)//Rows
 		{
 			temp += "|";
 			for (int j = 0; j < GS_TICTACTOE_BOARD_WIDTH; j++)//content of rows
 			{
-				if (gs_tictactoe_getSpaceState(demoState->tttGame, i, j) == gs_tictactoe_space_x)//If space is occupied by an x
+				gs_tictactoe_space_state ttt = gs_tictactoe_getSpaceState(demoState->tttGame, i, j);
+				if (ttt == gs_tictactoe_space_x)//If space is occupied by an x
 				{
-					temp += "X|";
+					temp += "X |";
 				}
-				else if (gs_tictactoe_getSpaceState(demoState->tttGame, i, j) == gs_tictactoe_space_o)//If space is occupied by an o
+				else if(ttt == gs_tictactoe_space_o)//If space is occupied by an o
 				{
-					temp += "O|";
+					temp += "O |";
 				}
-				else if (gs_tictactoe_getSpaceState(demoState->tttGame, i, j) == gs_tictactoe_space_open)//If space is occupied by nothing
+				else if (ttt == gs_tictactoe_space_open)//If space is occupied by nothing
 				{
 					temp += " |";
 				}
+				else {
+					temp += "null";
+					demoState->chatLog.push_back("ERROR! TicTacToe returned null");
+				}
 			}
-			temp += "\n";
 		}
 	}
 	else//should write local coordinates for battlehsip to see where you've fired etc.****This might need to be addressed later ************
 	{
-		temp += " A B C D E F G H I J \n";//Display letter at top of baord for coordinates
+		demoState->chatLog.push_back(" A B C D E F G H I J");//Display letter at top of baord for coordinates
 		for (int i = 0; i < GS_BATTLESHIP_BOARD_HEIGHT; i++)
 		{
 			temp += "|";
@@ -63,11 +67,10 @@ void PrintBoardToConsole(c3_DemoState* demoState)
 					temp += " |";
 				}
 			}
-			temp += "\n";
 		}
 	}
-	
-	demoState->chatLog.push_back(temp);//Put board into chat log to be displayed
+
+	demoState->chatLog.push_back(temp);
 }
 
 //Below Fucntion is used to display all available commands for tic-tac-toe
@@ -144,6 +147,18 @@ void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfi
 	}
 }
 
+void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, GameMove msg, int client = -1) {
+	if (client == -1) {
+		for (int i = 0; i < clientProfiles->iter; i++) {
+			peer->Send((char*)&msg, sizeof(GameMove), HIGH_PRIORITY, RELIABLE_ORDERED, 0, clientProfiles->profiles[i].address, false);
+
+		}
+	}
+	else {
+		peer->Send((char*)&msg, sizeof(GameMove), HIGH_PRIORITY, RELIABLE_ORDERED, 0, clientProfiles->profiles[client].address, false);
+	}
+}
+
 void c3demoUpdate(c3_DemoState const* demoState) {
 	//Game loop goes here
 	
@@ -208,7 +223,6 @@ void c3demoInput(c3_DemoState* demoState){
 			}
 			else if (input[1] == 'g' || input[1] == 'G')//Start Game (Host only)
 			{
-				
 				GameMove send;
 				char* trash;
 				char* posX;
@@ -219,39 +233,53 @@ void c3demoInput(c3_DemoState* demoState){
 				posX = strtok(NULL, " ");//posX = A char
 				posY = strtok(NULL, " ");//posY = 1 char
 				
-				if (input[2] == 'T' && demoState->isTTT == true)//Make move for tic tac toe game
+				if ((input[2] == 'T' || input[2] == 't' )&& demoState->isTTT == true)//Make move for tic tac toe game
 				{
+
+					if(!posX || !posY){
+						demoState->chatLog.push_back("Please enter a move to place.");
+						PrintBoardToConsole(demoState);
+						return;
+					}
 					send.id = (RakNet::MessageID)ID_GAME_MOVE;
-					strcpy(send.xPos, posX);//Copy posX into Packet
-					strcpy(send.yPos, posY);//Copy posY into Packet
+
+					send.xPos = *posX - '0';
+					send.yPos = *posY - '0';
 
 					send.currentGame = TIC_TAC_TOE;
 
 					if (demoState->isPlayer1 == true)//If the player making this move && is X Player place an x on that tile
 					{
 						//Update local game & tell if space is occupied
-						if (gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_x, *posX, *posY) == gs_tictactoe_space_invalid)
+						if (gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_x, send.xPos, send.yPos) == gs_tictactoe_space_invalid)
 						{
-							printf("Space is currently occupied");
+							demoState->chatLog.push_back("Space is currently occupied or invalid input");
 						}
 					}
 					else
 					{
 						//Update local game & tell if space is occupied
-						if (gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_o, *posX, *posY) == gs_tictactoe_space_invalid)
+						if (gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_o, send.xPos, send.yPos) == gs_tictactoe_space_invalid)
 						{
-							printf("Space is currently occupied");
+							demoState->chatLog.push_back("Space is currently occupied or invalid input");
 						}
 					}
 
-					demoState->peer->Send((char*)& send, sizeof(GameMove), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);//Send out move to other player
 					PrintBoardToConsole(demoState);
+
+					if(!demoState->isServer){
+						demoState->peer->Send((char*)&send, sizeof(GameMove), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);//Send out move to other player
+					}
+					else {
+						SendToClient(demoState->peer, &demoState->clientProfiles, send);
+					}
 				}
 				else if(input[2] == 'B' && demoState->isTTT == false)//Make move for Battleship game
 				{
 					send.id = (RakNet::MessageID)ID_GAME_MOVE;
-					strcpy(send.xPos, posX);//Copy posX into Packet
-					strcpy(send.yPos, posY);//Copy posY into Packet
+					
+					send.xPos = *posX - '0';
+					send.yPos = *posY - '0';
 
 					send.currentGame = BATTLESHIP;
 
@@ -476,11 +504,11 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			{
 				if (demoState->isPlayer1 == true)//If this is player 1(X Player)
 				{
-					gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_o, *read->xPos, *read->yPos);//Updates local game with opponent's move
+					gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_o, read->xPos, read->yPos);//Updates local game with opponent's move
 				}
 				else//If this is player 2(O Player)
 				{
-					gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_x, *read->xPos, *read->yPos);//Updates local game with opponent's move
+					gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_x, read->xPos, read->yPos);//Updates local game with opponent's move
 				}
 				
 				PrintBoardToConsole(demoState);
@@ -490,7 +518,7 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 				BattleshipReturnPacket send;
 
 				send.id = (RakNet::MessageID)ID_GAME_MOVE;
-				send.didHit = CheckBattlshipHit(demoState, *read->xPos, *read->yPos);//If coordinate hits a ship return true
+				send.didHit = CheckBattlshipHit(demoState, read->xPos, read->yPos);//If coordinate hits a ship return true
 
 				//Update Local Board to reflect hit or miss
 
@@ -545,33 +573,33 @@ void c3demoRender(c3_DemoState const* demoState){
 	glClear(GL_COLOR_BUFFER_BIT);
 	if(demoState->inGame){
 		//Draw the chatroom if we are in
-		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Chat: %s", demoState->str);
+		a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Chat: %s", demoState->str);
 
 		//Draw the chatlog
 		for(int i = 0; i < demoState->chatLog.size(); i++){
-			a3textDraw(demoState->text, -1, -1 + (.05f) * (demoState->chatLog.size() - i), -1, 1, 1, 1, 1, demoState->chatLog[i].c_str());
+			a3textDraw(demoState->text, -1, -.95 + (.05f) * (demoState->chatLog.size() - i), -1, 1, 1, 1, 1, demoState->chatLog[i].c_str());
 		}
 	}
 	else if(demoState->lobbyStage == 0){
-		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "C to connect, H to host, Q to quit: %s", demoState->str);
+		a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "C to connect, H to host, Q to quit: %s", demoState->str);
 	}
 	else if(demoState->lobbyStage == 1){
-		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: ");
+		a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: ");
 	}
 	else if(demoState->lobbyStage == 2){
 		if(demoState->isServer){
-			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "What Game would you like to play? (B)attleship or (T)ic-Tac-Toe: %s", demoState->str);
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "What Game would you like to play? (B)attleship or (T)ic-Tac-Toe: %s", demoState->str);
 		}
 		else {
-			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: %s", demoState->str);
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: %s", demoState->str);
 		}
 	}
 	else if(demoState->lobbyStage == 4){
 		if(demoState->isServer){
-			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter the username of the person who will play with you: %s", demoState->str);
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter the username of the person who will play with you: %s", demoState->str);
 		}
 		else {
-			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter your user name: %s", demoState->str);
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter your user name: %s", demoState->str);
 		}
 	}
 }
@@ -584,12 +612,12 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 		printf("Lobby called when it shouldn't have!\n");
 	}
 	else if(demoState->lobbyStage == 0){
-		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "C to connect, H to host, Q to quit: %s", demoState->str);
+		a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "C to connect, H to host, Q to quit: %s", demoState->str);
 		return;
 	}
 	else if(demoState->lobbyStage == 1){
 		if((demoState->str[0] == 'c') || (demoState->str[0] == 'C')){
-			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: ");
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: ");
 			RakNet::SocketDescriptor sd;
 			demoState->peer->Startup(1, &sd, 1);
 			demoState->isServer = false;
@@ -600,7 +628,7 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 			return;
 		}
 		else {
-			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "What Game would you like to play? (B)attleship or (T)ic-Tac-Toe: ");
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "What Game would you like to play? (B)attleship or (T)ic-Tac-Toe: ");
 			RakNet::SocketDescriptor sd(60000, 0);
 			demoState->peer->Startup(MAXCLIENTS, &sd, 1);
 			demoState->isServer = true;
@@ -609,10 +637,10 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 	}
 	else if(demoState->lobbyStage == 2){
 		if(demoState->isServer){
-			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "What Game would you like to play? (B)attleship or (T)ic-Tac-Toe: %s", demoState->str);
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "What Game would you like to play? (B)attleship or (T)ic-Tac-Toe: %s", demoState->str);
 		}
 		else {
-			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: %s", demoState->str);
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: %s", demoState->str);
 		}
 		return;
 	}
@@ -634,7 +662,7 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 				demoState->isPlayer1 = true;
 			}
 
-			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter the username of the person who will play with you: ");
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter the username of the person who will play with you: ");
 			demoState->lobbyStage++;
 		}
 		else {
@@ -645,16 +673,16 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 			else {
 				strcpy(demoState->ip, demoState->str);
 			}
-			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter your user name: ");
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter your user name: ");
 			demoState->lobbyStage++;
 		}
 	}
 	else if(demoState->lobbyStage == 4){
 		if(demoState->isServer){
-			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter the username of the person who will play with you: %s", demoState->str);
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter the username of the person who will play with you: %s", demoState->str);
 		}
 		else {
-			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Enter your user name: %s", demoState->str);
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter your user name: %s", demoState->str);
 		}
 		return;
 	}
