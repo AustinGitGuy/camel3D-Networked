@@ -3,7 +3,7 @@
 #include <GL/glew.h>
 
 //Prints all connected cilents and their IP addresses
-void PrintClientList(ProfileList* clientProfiles)
+void PrintClientList(const ProfileList* clientProfiles)
 {
 	printf("\n****CLIENT LIST****");
 	printf("\nUsername    IP Address");
@@ -87,27 +87,22 @@ void c3demoUpdate(c3_DemoState const* demoState) {
 
 }
 
-void c3demoInput(c3_DemoState const* demoState){
+void c3demoInput(c3_DemoState* demoState){
 	//Grab keybaord input and send appriotrate command based on them
 
 	char input[127];
 	strcpy(input, demoState->str);
-	if (input[0] != '\n') {
-		//Check if a command is typed
-		if (input[0] != '/') {
-
-			char* nameEnd;
-			nameEnd = strchr(input, '\n');
-			*nameEnd = ' ';
-
+	if(input[0] != '\n'){
+		//Check if a command is not typed
+		if(input[0] != '/'){
 			char tmp[127];
 			MsgStruct send;
 
-			if (demoState->isServer) {
+			if(demoState->isServer){
 				strcpy(tmp, "Server: ");//Appends Server to Beginning of Message
 			}
 			else {
-				strcpy(send.senderName, demoState->clientProfiles->profiles[0].name);//Appends Cilent Username to Beginning of Message
+				strcpy(send.senderName, demoState->clientProfiles.profiles[0].name);//Appends Cilent Username to Beginning of Message
 			}
 
 			strcat(tmp, ": (Public) ");//Appends a notification that Message is public
@@ -115,8 +110,10 @@ void c3demoInput(c3_DemoState const* demoState){
 			send.id = (RakNet::MessageID)ID_GAME_MESSAGE_1;
 			strcpy(send.msg, strcpy(tmp, input));
 
+			demoState->chatLog.push_back(std::string(send.msg));
+
 			if (demoState->isServer) {
-				SendToClient(demoState->peer, demoState->clientProfiles, send);
+				SendToClient(demoState->peer, &demoState->clientProfiles, send);
 			}
 			else {
 				//Cast to a char* to send the struct as a packet
@@ -166,10 +163,6 @@ void c3demoInput(c3_DemoState const* demoState){
 			{
 				char* trash;
 
-				char* nameEnd;
-				nameEnd = strchr(input, '\n');
-				*nameEnd = ' ';
-
 				trash = strtok(input, " ");
 				trash = strtok(NULL, " ");
 
@@ -180,7 +173,7 @@ void c3demoInput(c3_DemoState const* demoState){
 					strcpy(tmp, "Server: ");//Appends Server to Beginning of Message
 				}
 				else {
-					strcpy(send.senderName, demoState->clientProfiles->profiles[0].name);//Appends Client Username to Beginning of Message
+					strcpy(send.senderName, demoState->clientProfiles.profiles[0].name);//Appends Client Username to Beginning of Message
 				}
 
 				strcpy(tmp, ": (Whisper) ");//Appends a notification that Message is private
@@ -199,7 +192,7 @@ void c3demoInput(c3_DemoState const* demoState){
 			{
 				if (demoState->isServer)//If server run command
 				{
-					PrintClientList(demoState->clientProfiles);
+					PrintClientList(&demoState->clientProfiles);
 				}
 				else//If not server deny access
 				{
@@ -210,7 +203,7 @@ void c3demoInput(c3_DemoState const* demoState){
 			{
 				MsgStruct send;
 				send.id = (RakNet::MessageID)ID_NAME_LEAVE;
-				strcpy(send.senderName, demoState->clientProfiles->profiles[0].name);
+				strcpy(send.senderName, demoState->clientProfiles.profiles[0].name);
 
 				demoState->peer->Send((char*)& send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
 
@@ -236,7 +229,7 @@ void c3demoNetworkingSend(c3_DemoState const* demoState) {
 
 }
 
-void c3demoNetworkingRecieve(c3_DemoState const* demoState) {
+void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 	//Copy for loop to here
 
 	bool running = true;
@@ -250,7 +243,7 @@ void c3demoNetworkingRecieve(c3_DemoState const* demoState) {
 			//When a client has disconnected display message saying they have left
 			MsgStruct send;
 			send.id = (RakNet::MessageID)ID_NAME_LEAVE;
-			strcpy(send.msg, demoState->clientProfiles->profiles[0].name);
+			strcpy(send.msg, demoState->clientProfiles.profiles[0].name);
 
 			//Cast to a char* to send the struct as a packet
 			demoState->peer->Send((char*)&send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
@@ -267,7 +260,7 @@ void c3demoNetworkingRecieve(c3_DemoState const* demoState) {
 			// Use a struct to send the id of the game
 			MsgStruct send;
 			send.id = (RakNet::MessageID)ID_NAME_JOIN;
-			strcpy(send.msg, demoState->clientProfiles->profiles[0].name);
+			strcpy(send.msg, demoState->clientProfiles.profiles[0].name);
 
 			//Cast to a char* to send the struct as a packet
 			demoState->peer->Send((char*)&send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
@@ -308,7 +301,7 @@ void c3demoNetworkingRecieve(c3_DemoState const* demoState) {
 			printf("%s\n", read->msg);
 
 			//Message recieved
-			SendToClient(demoState->peer, demoState->clientProfiles, *read);
+			SendToClient(demoState->peer, &demoState->clientProfiles, *read);
 			break;
 		}
 
@@ -317,11 +310,11 @@ void c3demoNetworkingRecieve(c3_DemoState const* demoState) {
 			//If we are getting a name then store it for later.
 			//Since this is the server we can still use the profileList struct
 			MsgStruct* read = (MsgStruct*)packet->data;
-			strcpy(demoState->clientProfiles->profiles[demoState->clientProfiles->iter].name, read->msg);
-			demoState->clientProfiles->profiles[demoState->clientProfiles->iter].address = packet->systemAddress;
+			strcpy(demoState->clientProfiles.profiles[demoState->clientProfiles.iter].name, read->msg);
+			demoState->clientProfiles.profiles[demoState->clientProfiles.iter].address = packet->systemAddress;
 
-			printf("Client connected with name %s\n", demoState->clientProfiles->profiles[demoState->clientProfiles->iter].name);
-			demoState->clientProfiles->iter++;
+			printf("Client connected with name %s\n", demoState->clientProfiles.profiles[demoState->clientProfiles.iter].name);
+			demoState->clientProfiles.iter++;
 			break;
 		}
 		case ID_NAME_LEAVE: {
@@ -332,7 +325,7 @@ void c3demoNetworkingRecieve(c3_DemoState const* demoState) {
 
 
 			printf("%s has disconnected\n", read->senderName);
-			demoState->clientProfiles->iter--;
+			demoState->clientProfiles.iter--;
 			break;
 		}
 
@@ -341,16 +334,16 @@ void c3demoNetworkingRecieve(c3_DemoState const* demoState) {
 			MsgStruct* read = (MsgStruct*)packet->data;
 
 			int i;
-			for (i = 0; i < demoState->clientProfiles->iter; i++)
+			for (i = 0; i < demoState->clientProfiles.iter; i++)
 			{
-				if (strcmp(read->receiveName, demoState->clientProfiles->profiles[i].name) == 0)//compares Name in str to list of names in clientProfiles
+				if (strcmp(read->receiveName, demoState->clientProfiles.profiles[i].name) == 0)//compares Name in str to list of names in clientProfiles
 				{
 					break;
 				}
 
 			}
 
-			if (i > demoState->clientProfiles->iter)
+			if (i > demoState->clientProfiles.iter)
 			{
 				strcpy(read->msg, "Could not find user.\n");
 
@@ -364,7 +357,7 @@ void c3demoNetworkingRecieve(c3_DemoState const* demoState) {
 				printf("%s\n", read->msg);
 
 				//Message recieved
-				SendToClient(demoState->peer, demoState->clientProfiles, *read, i);
+				SendToClient(demoState->peer, &demoState->clientProfiles, *read, i);
 				break;
 			}
 		}
@@ -404,10 +397,15 @@ void c3demoRender(c3_DemoState const* demoState){
 
 	//Clear the screen
 
-	if (demoState->inGame) {
+	glClear(GL_COLOR_BUFFER_BIT);
+	if(demoState->inGame){
 		//Draw the chatroom if we are in
-		glClear(GL_COLOR_BUFFER_BIT);
 		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Chat: %s", demoState->str);
+
+		//Draw the chatlog
+		for(int i = 0; i < demoState->chatLog.size(); i++){
+			a3textDraw(demoState->text, -1, -1 + (.05f) * (demoState->chatLog.size() - i), -1, 1, 1, 1, 1, demoState->chatLog[i].c_str());
+		}
 	}
 	else if(demoState->lobbyStage == 0){
 		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "C to connect, H to host, Q to quit: %s", demoState->str);
@@ -455,7 +453,7 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 		}
 		else {
 			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "What Game would you like to play? (B)attleship or (T)ic-Tac-Toe: ");
-			RakNet::SocketDescriptor sd(demoState->serverPort, 0);
+			RakNet::SocketDescriptor sd(60000, 0);
 			demoState->peer->Startup(MAXCLIENTS, &sd, 1);
 			demoState->isServer = true;
 		}
@@ -472,7 +470,7 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 	}
 	else if(demoState->lobbyStage == 3){
 		if(demoState->isServer){
-			if (demoState->str[0] == 'T')//If host chose tic tac toe
+			if (demoState->str[0] == 'T' || demoState->str[0] == 't')//If host chose tic tac toe
 			{
 				//Start Tic tac toe game
 			}
@@ -485,7 +483,7 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 			demoState->peer->SetMaximumIncomingConnections(MAXCLIENTS);
 
 			//TODO: Queue this onto the text stack
-			a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Starting the server.");
+			demoState->chatLog.push_back("Starting the server");
 			demoState->inGame = true;
 			demoState->lobbyStage = -1;
 		}
@@ -509,15 +507,10 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 		if(demoState->index == 0){
 			strcpy(demoState->str, "Blank");
 		}
-		strcpy(demoState->clientProfiles->profiles[0].name, demoState->str);
+		strcpy(demoState->clientProfiles.profiles[0].name, demoState->str);
 
-		char* nameEnd;
-		nameEnd = strchr(demoState->clientProfiles->profiles[0].name, '\n');
-		*nameEnd = '\0';
-
-		//TODO: Add this to the text stack
-		a3textDraw(demoState->text, -1, -1, -1, 1, 1, 1, 1, "Starting the client.");
-		demoState->peer->Connect(demoState->ip, demoState->serverPort, 0, 0);
+		demoState->chatLog.push_back("Starting the client");
+		demoState->peer->Connect(demoState->ip, 60000, 0, 0);
 		demoState->inGame = true;
 		demoState->lobbyStage = -1;
 	}

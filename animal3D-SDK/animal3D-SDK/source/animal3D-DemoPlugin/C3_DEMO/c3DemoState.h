@@ -6,8 +6,8 @@
 #include "Raknet/BitStream.h"
 #include "Raknet/RakNetTypes.h"
 
-#include "A3_DEMO/a3_Networking/a3_Networking_gs_tictactoe.c"//TicTacToe file
-#include "A3_DEMO/a3_Networking/a3_Networking_gs_battleship.c"//BattleShip file
+#include <vector>
+#include <string>
 
 enum GameMessages {
 	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE, ID_GAME_MOVE
@@ -113,12 +113,14 @@ const int MAX_CHARACTERS = 127;
 		unsigned short serverPort = 60000;
 		RakNet::Packet* packet;
 		UserProfile profile; //This is for the server (if we are client)
-		ProfileList* clientProfiles;
+		ProfileList clientProfiles;
 		bool isServer;
 		bool gameTrue;
 		bool programTrue = true;//Used to reset back to lobby
 		bool inGame = false;
 		int lobbyStage = 0;
+
+		std::vector<std::string> chatLog;
 
 		//-----------------------------------
 		//Game Stuff
@@ -130,7 +132,7 @@ const int MAX_CHARACTERS = 127;
 
 	void c3demoUpdate(c3_DemoState const* demoState);
 
-	void c3demoInput(c3_DemoState const* demoState);
+	void c3demoInput(c3_DemoState* demoState);
 
 	void c3demoNetworkingSend(c3_DemoState const* demoState);
 

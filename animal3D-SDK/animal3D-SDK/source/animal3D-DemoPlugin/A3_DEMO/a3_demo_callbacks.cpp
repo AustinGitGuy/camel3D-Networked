@@ -300,9 +300,9 @@ A3DYLIBSYMBOL a3i32 a3demoCB_idle(c3_DemoState *demoState)
 			//a3demo_input(demoState, demoState->renderTimer->secondsPerTick);
 			//a3demo_render(demoState);
 			
+			c3demoRender(demoState);
 			if(demoState->inGame){
 				c3demoUpdate(demoState);
-				c3demoRender(demoState);
 			}
 			
 			// update input
