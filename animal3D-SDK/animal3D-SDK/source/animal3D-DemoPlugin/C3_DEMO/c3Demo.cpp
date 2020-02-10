@@ -17,14 +17,14 @@ void PrintClientList(const ProfileList* clientProfiles)
 
 void PrintBoardToConsole(c3_DemoState* demoState)
 {
-	
+	int i, j;
+	char temp[10][10];
 	if (demoState->isTTT)//if game is TTT
 	{
-		char temp[GS_TICTACTOE_BOARD_HEIGHT][10];
-		for (int i = 0; i < GS_TICTACTOE_BOARD_HEIGHT; i++)//Rows
+		for (i = 0; i < GS_TICTACTOE_BOARD_HEIGHT; i++)//Rows
 		{
 			strcpy(temp[i], "");
-			for (int j = 0; j < GS_TICTACTOE_BOARD_WIDTH; j++)//content of rows
+			for (j = 0; j < GS_TICTACTOE_BOARD_WIDTH; j++)//content of rows
 			{
 				gs_tictactoe_space_state ttt = gs_tictactoe_getSpaceState(demoState->tttGame, i, j);
 				if (ttt == gs_tictactoe_space_x)//If space is occupied by an x
@@ -52,11 +52,10 @@ void PrintBoardToConsole(c3_DemoState* demoState)
 	}
 	else//should write local coordinates for battlehsip to see where you've fired etc.****This might need to be addressed later ************
 	{
-		char temp[GS_CHECKERS_BOARD_HEIGHT][10];
-		for (int i = 0; i < GS_CHECKERS_BOARD_HEIGHT; i++)//Rows
+		for (i = 0; i < GS_CHECKERS_BOARD_HEIGHT; i++)//Rows
 		{
 			strcpy(temp[i], "");
-			for (int j = 0; j < 4; j++)//content of rows
+			for (j = 0; j < GS_CHECKERS_BOARD_WIDTH; j++)//content of rows
 			{
 				gs_checkers_space_state check = gs_checkers_getSpaceState(demoState->checkersGame, i, j);
 				if (check == gs_checkers_space_white)//If space is occupied by an x
