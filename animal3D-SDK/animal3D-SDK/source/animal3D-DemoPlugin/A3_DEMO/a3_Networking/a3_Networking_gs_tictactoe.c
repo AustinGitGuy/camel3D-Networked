@@ -76,6 +76,40 @@ inline gs_tictactoe_space_state gs_tictactoe_setSpaceState(gs_tictactoe game, gs
 	return gs_tictactoe_space_invalid;
 }
 
+inline gs_tictactoe_space_state ttt_getWin(gs_tictactoe game){
+	for(int x = 0; x < GS_TICTACTOE_BOARD_WIDTH; x++){
+		gs_tictactoe_space_state state;
+		for(int y = 0; y < GS_TICTACTOE_BOARD_HEIGHT; y++){
+			if(y == 0){
+				state = game[x][y];
+			}
+			if(game[x][y] != state){
+				break;
+			}
+			if(y == GS_TICTACTOE_BOARD_HEIGHT - 1){
+				return state;
+			}
+		}
+	}
+
+	for(int y = 0; y < GS_TICTACTOE_BOARD_HEIGHT; y++){
+		gs_tictactoe_space_state state;
+		for(int x = 0; x < GS_TICTACTOE_BOARD_WIDTH; x++){
+			if(x == 0){
+				state = game[x][y];
+			}
+			if(game[x][y] != state){
+				break;
+			}
+			if(x == GS_TICTACTOE_BOARD_HEIGHT - 1){
+				return state;
+			}
+		}
+	}
+
+	return gs_tictactoe_space_invalid;
+}
+
 inline gs_tictactoe_index gs_tictactoe_reset(gs_tictactoe game)
 {
 	gs_tictactoe_index xpos, ypos, total;

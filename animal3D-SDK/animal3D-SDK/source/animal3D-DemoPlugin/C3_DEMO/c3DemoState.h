@@ -10,7 +10,7 @@
 #include <string>
 
 #include "A3_DEMO/a3_Networking/a3_Networking_gs_tictactoe.c"
-#include "A3_DEMO/a3_Networking/a3_Networking_gs_battleship.c"
+#include "A3_DEMO/a3_Networking/a3_Networking_gs_checkers.c"
 
 enum GameMessages {
 	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE, ID_GAME_MOVE, ID_INVITE
@@ -21,7 +21,7 @@ enum UserGameState {
 };
 
 enum ActiveGame{
-	TIC_TAC_TOE, BATTLESHIP
+	TIC_TAC_TOE, CHECKERS
 
 };
 
@@ -44,15 +44,8 @@ struct GameMove {
 	ActiveGame currentGame;
 	int xPos;
 	int yPos;
-};
-#pragma pack(pop)
-
-#pragma pack(push, 1)
-struct BattleshipReturnPacket {
-	unsigned char id;
-	char senderName[127];
-	char receiveName[127];
-	bool didHit;
+	int newXPos;
+	int newYPos;
 };
 #pragma pack(pop)
 
@@ -146,19 +139,21 @@ const int MAX_CHARACTERS = 127;
 		ProfileList clientProfiles;
 		bool isServer;
 		bool gameTrue;
+		bool currentTurn;
 		bool programTrue = true;//Used to reset back to lobby
 		bool inGame = false;
 		int lobbyStage = 0;
 
 		bool playingGame = false;
 
-		std::vector<std::string> chatLog;
+		std::string chatLog[100];
+
+		int chatIter = 0;
 
 		//-----------------------------------
 		//Game Stuff
 		gs_tictactoe tttGame;
-		gs_battleship battleGameLocal;//Local Player's board
-		gs_battleship battleGameEnemy;
+		gs_checkers checkersGame;
 
 		bool isTTT = false;
 		bool isPlayer1 = false;

@@ -32,6 +32,9 @@
 //-----------------------------------------------------------------------------
 // DECLARATIONS
 
+#ifndef Checkers
+#define Checkers
+
 #define GS_CHECKERS_PLAYERS					2
 #define GS_CHECKERS_BOARD_WIDTH				8
 #define GS_CHECKERS_BOARD_HEIGHT			8
@@ -53,7 +56,7 @@ typedef		enum gs_checkers_space_state	gs_checkers_space_state;
 #endif	// !__cplusplus
 
 // checkers game state
-typedef		unsigned char					gs_checkers_index;
+typedef		int					gs_checkers_index;
 typedef		gs_checkers_space_state			gs_checkers[GS_CHECKERS_BOARD_WIDTH][GS_CHECKERS_BOARD_HEIGHT];
 
 
@@ -70,17 +73,36 @@ inline gs_checkers_space_state gs_checkers_getSpaceState(gs_checkers const game,
 
 inline gs_checkers_space_state gs_checkers_setSpaceState(gs_checkers game, gs_checkers_space_state const state, gs_checkers_index const xpos, gs_checkers_index const ypos)
 {
-	if (GS_CHECKERS_VALID(xpos, ypos))
+	if(GS_CHECKERS_VALID(xpos, ypos)){
+		if(game[xpos][ypos] == gs_checkers_space_invalid) return gs_checkers_space_invalid;
+		if (game[xpos][ypos] == state) return gs_checkers_space_invalid;
 		return (game[xpos][ypos] = state);
+	}
 	return gs_checkers_space_invalid;
 }
 
 inline gs_checkers_index gs_checkers_reset(gs_checkers game)
 {
 	gs_checkers_index xpos, ypos, total;
-	for (xpos = 0; xpos < GS_CHECKERS_BOARD_WIDTH; ++xpos)
-		for (ypos = 0; ypos < GS_CHECKERS_BOARD_HEIGHT; ++ypos)
-			game[xpos][ypos] = gs_checkers_space_open;
+	for(xpos = 0; xpos < GS_CHECKERS_BOARD_WIDTH; ++xpos){
+		for(ypos = 0; ypos < GS_CHECKERS_BOARD_HEIGHT; ++ypos){
+			if((xpos + 1) % 2 == 0){
+				if((ypos + 1) % 2 == 0){
+					game[xpos][ypos] = gs_checkers_space_invalid;
+				}
+				else {
+					game[xpos][ypos] = gs_checkers_space_open;
+				}
+			}
+			else if ((ypos + 1) % 2 != 0){
+				game[xpos][ypos] = gs_checkers_space_invalid;
+			}
+			else {
+				game[xpos][ypos] = gs_checkers_space_open;
+			}
+		}
+	}
+		
 	total = (xpos * ypos);
 	for (xpos = 0; xpos < 3; ++xpos)
 		for (ypos = xpos % 2; ypos < GS_CHECKERS_BOARD_HEIGHT; ypos += 2)
@@ -95,7 +117,7 @@ inline gs_checkers_index gs_checkers_reset(gs_checkers game)
 //-----------------------------------------------------------------------------
 // DEFINITIONS
 
-int launchCheckers()
+inline int launchCheckers()
 {
 	gs_checkers game = { 0 };
 
@@ -106,5 +128,6 @@ int launchCheckers()
 	return 0;
 }
 
+#endif //Checkers
 
 //-----------------------------------------------------------------------------

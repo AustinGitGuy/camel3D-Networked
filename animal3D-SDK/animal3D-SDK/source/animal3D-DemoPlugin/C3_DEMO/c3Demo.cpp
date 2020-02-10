@@ -17,60 +17,70 @@ void PrintClientList(const ProfileList* clientProfiles)
 
 void PrintBoardToConsole(c3_DemoState* demoState)
 {
-	std::string temp = "";
+	
 	if (demoState->isTTT)//if game is TTT
 	{
-		demoState->chatLog.push_back(" A B C ");
+		char temp[GS_TICTACTOE_BOARD_HEIGHT][10];
 		for (int i = 0; i < GS_TICTACTOE_BOARD_HEIGHT; i++)//Rows
 		{
-			temp += "|";
+			strcpy(temp[i], "");
 			for (int j = 0; j < GS_TICTACTOE_BOARD_WIDTH; j++)//content of rows
 			{
 				gs_tictactoe_space_state ttt = gs_tictactoe_getSpaceState(demoState->tttGame, i, j);
 				if (ttt == gs_tictactoe_space_x)//If space is occupied by an x
 				{
-					temp += "X |";
+					strcat(temp[i], "|X");
 				}
 				else if(ttt == gs_tictactoe_space_o)//If space is occupied by an o
 				{
-					temp += "O |";
+					strcat(temp[i], "|O");
 				}
 				else if (ttt == gs_tictactoe_space_open)//If space is occupied by nothing
 				{
-					temp += " |";
+					strcat(temp[i], "| ");
 				}
 				else {
-					temp += "null";
-					demoState->chatLog.push_back("ERROR! TicTacToe returned null");
+					strcat(temp[i], "|null");
+					demoState->chatLog[demoState->chatIter] = "ERROR! TicTacToe returned null";
+					demoState->chatIter++;
 				}
 			}
+			strcat(temp[i], "|");
+			demoState->chatLog[demoState->chatIter] = (std::string)temp[i];
+			demoState->chatIter++;
 		}
 	}
 	else//should write local coordinates for battlehsip to see where you've fired etc.****This might need to be addressed later ************
 	{
-		demoState->chatLog.push_back(" A B C D E F G H I J");//Display letter at top of baord for coordinates
-		for (int i = 0; i < GS_BATTLESHIP_BOARD_HEIGHT; i++)
+		char temp[GS_CHECKERS_BOARD_HEIGHT][10];
+		for (int i = 0; i < GS_CHECKERS_BOARD_HEIGHT; i++)//Rows
 		{
-			temp += "|";
-			for (int j = 0; j < GS_BATTLESHIP_BOARD_WIDTH; j++)
+			strcpy(temp[i], "");
+			for (int j = 0; j < 4; j++)//content of rows
 			{
-				if (gs_checkers_getSpaceState(demoState->battleGameLocal, demoState->isPlayer1, i, j)  == gs_battleship_space_hit)
+				gs_checkers_space_state check = gs_checkers_getSpaceState(demoState->checkersGame, i, j);
+				if (check == gs_checkers_space_white)//If space is occupied by an x
 				{
-					temp += "H|";
+					strcat(temp[i], "|w");
 				}
-				else if (gs_checkers_getSpaceState(demoState->battleGameLocal, demoState->isPlayer1, i, j) == gs_battleship_space_miss)
+				else if (check == gs_checkers_space_black)//If space is occupied by an o
 				{
-					temp += "M|";
+					strcat(temp[i], "|b");
 				}
-				else if (gs_checkers_getSpaceState(demoState->battleGameLocal, demoState->isPlayer1, i, j) == gs_battleship_space_open)
+				else if (check == gs_checkers_space_open)//If space is occupied by nothing
 				{
-					temp += " |";
+					strcat(temp[i], "| ");
+				}
+				else if(check == gs_checkers_space_invalid){
+					strcat(temp[i], "|-");
 				}
 			}
+
+			strcat(temp[i], "|");
+			demoState->chatLog[demoState->chatIter] = (std::string)temp[i];
+			demoState->chatIter++;
 		}
 	}
-
-	demoState->chatLog.push_back(temp);
 }
 
 //Below Fucntion is used to display all available commands for tic-tac-toe
@@ -120,19 +130,6 @@ void DisplayAllCommands()
 	{
 		DisplayCommandsBattleship();
 	}
-}
-
-//Take sin position and outputs whether it hit on the battlship board local to this instance
-bool CheckBattlshipHit(c3_DemoState* demoState, char xPos, char yPos) 
-{
-	bool temp = false;
-	//If the coordinates hit anything, but an open space return true (returning true should mean it is a ship))
-	if (gs_checkers_getSpaceState(demoState->battleGameLocal, 1, xPos,yPos) != gs_battleship_space_open)
-	{
-		temp = true;
-	}
-
-	return temp;
 }
 
 void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, MsgStruct msg, int client = -1) {
@@ -195,7 +192,8 @@ void c3demoInput(c3_DemoState* demoState){
 
 			if(demoState->isServer){
 				SendToClient(demoState->peer, &demoState->clientProfiles, send);
-				demoState->chatLog.push_back(std::string(send.senderName) + std::string(send.msg));
+				demoState->chatLog[demoState->chatIter] = std::string(send.senderName) + std::string(send.msg);
+				demoState->chatIter++;
 			}
 			else {
 				//Cast to a char* to send the struct as a packet
@@ -223,6 +221,12 @@ void c3demoInput(c3_DemoState* demoState){
 			}
 			else if (input[1] == 'g' || input[1] == 'G')//Start Game (Host only)
 			{
+				if(!demoState->currentTurn){
+					demoState->chatLog[demoState->chatIter] = "Please wait your turn\n";
+					demoState->chatIter++;
+					return;
+				}
+
 				GameMove send;
 				char* trash;
 				char* posX;
@@ -237,7 +241,8 @@ void c3demoInput(c3_DemoState* demoState){
 				{
 
 					if(!posX || !posY){
-						demoState->chatLog.push_back("Please enter a move to place.");
+						demoState->chatLog[demoState->chatIter] = "Please enter a move to place.\n";
+						demoState->chatIter++; 
 						PrintBoardToConsole(demoState);
 						return;
 					}
@@ -253,16 +258,34 @@ void c3demoInput(c3_DemoState* demoState){
 						//Update local game & tell if space is occupied
 						if (gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_x, send.xPos, send.yPos) == gs_tictactoe_space_invalid)
 						{
-							demoState->chatLog.push_back("Space is currently occupied or invalid input");
-						}
+							demoState->chatLog[demoState->chatIter] = "Space is currently occupied or invalid input";
+							demoState->chatIter++;
+							return;
+						}	
 					}
 					else
 					{
 						//Update local game & tell if space is occupied
 						if (gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_o, send.xPos, send.yPos) == gs_tictactoe_space_invalid)
 						{
-							demoState->chatLog.push_back("Space is currently occupied or invalid input");
+							demoState->chatLog[demoState->chatIter] = "Space is currently occupied or invalid input";
+							demoState->chatIter++;
+							return;
 						}
+					}
+
+					char tmp[10];
+					if (ttt_getWin(demoState->tttGame) == gs_tictactoe_space_o){
+						strcpy(tmp, "O's win!");
+						demoState->chatLog[demoState->chatIter] = (std::string)tmp;
+						demoState->chatIter++;
+						gs_tictactoe_reset(demoState->tttGame);
+					}
+					else if (ttt_getWin(demoState->tttGame) == gs_tictactoe_space_x){
+						strcpy(tmp, "X's win!");
+						demoState->chatLog[demoState->chatIter] = (std::string)tmp;
+						demoState->chatIter++;
+						gs_tictactoe_reset(demoState->tttGame);
 					}
 
 					PrintBoardToConsole(demoState);
@@ -273,18 +296,82 @@ void c3demoInput(c3_DemoState* demoState){
 					else {
 						SendToClient(demoState->peer, &demoState->clientProfiles, send);
 					}
+
+					demoState->currentTurn = false;
 				}
-				else if(input[2] == 'B' && demoState->isTTT == false)//Make move for Battleship game
+				else if((input[2] == 'C' || input[2] == 'c') && demoState->isTTT == false)//Make move for Checkers game
 				{
 					send.id = (RakNet::MessageID)ID_GAME_MOVE;
 					
+					char* posXn;
+					char* posYn;
+
+					posXn = strtok(NULL, " ");//posX = A char
+					posYn = strtok(NULL, " ");//posY = 1 char
+
+					if (!posYn || !posXn) {
+						demoState->chatLog[demoState->chatIter] = "Please enter a move to place.\n";
+						demoState->chatIter++;
+						PrintBoardToConsole(demoState);
+						return;
+					}
+
 					send.xPos = *posX - '0';
 					send.yPos = *posY - '0';
+					send.newXPos = *posXn - '0';
+					send.newYPos = *posYn - '0';
 
-					send.currentGame = BATTLESHIP;
+					send.currentGame = CHECKERS;
 
-					demoState->peer->Send((char*)& send, sizeof(GameMove), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);//Send out move to other player
+					if (demoState->isPlayer1 == true)//If the player making this move && is X Player place an x on that tile
+					{
+						//Update local game & tell if space is occupied
+						if(gs_checkers_getSpaceState(demoState->checkersGame, send.xPos, send.yPos) != gs_checkers_space_black){
+							PrintBoardToConsole(demoState);
+							demoState->chatLog[demoState->chatIter] = "Space is currently occupied or invalid input";
+							demoState->chatIter++;
+							return;
+						}
+						if (gs_checkers_setSpaceState(demoState->checkersGame, gs_checkers_space_black, send.newXPos, send.newYPos) == gs_checkers_space_invalid)
+						{
+							PrintBoardToConsole(demoState);
+							demoState->chatLog[demoState->chatIter] = "Space is currently occupied or invalid input";
+							demoState->chatIter++;
+							return;
+						}
+
+						gs_checkers_setSpaceState(demoState->checkersGame, gs_checkers_space_open, send.xPos, send.yPos);
+					}
+					else
+					{
+						//Update local game & tell if space is occupied
+						if (gs_checkers_getSpaceState(demoState->checkersGame, send.xPos, send.yPos) != gs_checkers_space_white){
+							PrintBoardToConsole(demoState);
+							demoState->chatLog[demoState->chatIter] = "Space is currently occupied or invalid input";
+							demoState->chatIter++;
+							return;
+						}
+						if (gs_checkers_setSpaceState(demoState->checkersGame, gs_checkers_space_white, send.newXPos, send.newYPos) == gs_checkers_space_invalid)
+						{
+							PrintBoardToConsole(demoState);
+							demoState->chatLog[demoState->chatIter] = "Space is currently occupied or invalid input";
+							demoState->chatIter++;
+							return;
+						}
+
+						gs_checkers_setSpaceState(demoState->checkersGame, gs_checkers_space_open, send.xPos, send.yPos);
+					}
+
 					PrintBoardToConsole(demoState);
+
+					if (!demoState->isServer) {
+						demoState->peer->Send((char*)&send, sizeof(GameMove), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);//Send out move to other player
+					}
+					else {
+						SendToClient(demoState->peer, &demoState->clientProfiles, send);
+					}
+
+					demoState->currentTurn = false;
 				}
 				
 			}
@@ -368,7 +455,8 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 	for (packet = demoState->peer->Receive(); packet; demoState->peer->DeallocatePacket(packet), packet = demoState->peer->Receive()) {
 		switch(packet->data[0]){
 		case ID_REMOTE_DISCONNECTION_NOTIFICATION:
-			demoState->chatLog.push_back("Another client has disconnected.");
+			demoState->chatLog[demoState->chatIter] = "Another client has disconnected.";
+			demoState->chatIter++; 
 			//When a client has disconnected display message saying they have left
 			MsgStruct send;
 			send.id = (RakNet::MessageID)ID_NAME_LEAVE;
@@ -378,14 +466,16 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			demoState->peer->Send((char*)&send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
 			break;
 		case ID_REMOTE_CONNECTION_LOST:
-			demoState->chatLog.push_back("Another client has lost the connection.");
+			demoState->chatLog[demoState->chatIter] = "Another client has lost the connection.";
+			demoState->chatIter++; 
 			break;
 		case ID_REMOTE_NEW_INCOMING_CONNECTION:
-			demoState->chatLog.push_back("Another client has connected.");
+			demoState->chatLog[demoState->chatIter] = "Another client has connected.";
+			demoState->chatIter++; 
 			break;
 		case ID_CONNECTION_REQUEST_ACCEPTED: {
-			demoState->chatLog.push_back("Our connection request has been accepted.");
-
+			demoState->chatLog[demoState->chatIter] = "Our connection request has been accepted.";
+			demoState->chatIter++;
 			// Use a struct to send the id of the game
 			MsgStruct send;
 			send.id = (RakNet::MessageID)ID_NAME_JOIN;
@@ -399,26 +489,31 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			break;
 		}
 		case ID_NEW_INCOMING_CONNECTION:
-			demoState->chatLog.push_back("A connection is incoming.");
+			demoState->chatLog[demoState->chatIter] = "A connection is incoming.";
+			demoState->chatIter++; 
 			break;
 		case ID_NO_FREE_INCOMING_CONNECTIONS:
-			demoState->chatLog.push_back("The server is full.");
+			demoState->chatLog[demoState->chatIter] = "The server is full.";
+			demoState->chatIter++; 
 			break;
 		case ID_DISCONNECTION_NOTIFICATION:
 			if (demoState->isServer) {
-				demoState->chatLog.push_back("A client has disconnected.");
-
+				demoState->chatLog[demoState->chatIter] = "A client has disconnected.";
+				demoState->chatIter++;
 			}
 			else {
-				demoState->chatLog.push_back("We have been disconnected.");
-			}
+				demoState->chatLog[demoState->chatIter] = "We have been disconnected.";
+				demoState->chatIter++;
+			}	
 
 		case ID_CONNECTION_LOST:
 			if (demoState->isServer) {
-				demoState->chatLog.push_back("A client lost the connection.");
+				demoState->chatLog[demoState->chatIter] = "A client lost the connection.";
+				demoState->chatIter++;
 			}
 			else {
-				demoState->chatLog.push_back("Connection lost.");
+				demoState->chatLog[demoState->chatIter] = "Connection lost.";
+				demoState->chatIter++;
 			}
 
 			break;
@@ -427,7 +522,8 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			//Cast it back to a struct to be read
 			MsgStruct* read = (MsgStruct*)packet->data;
 
-			demoState->chatLog.push_back((std::string)read->senderName + (std::string)read->msg);
+			demoState->chatLog[demoState->chatIter] = (std::string)read->senderName + (std::string)read->msg;
+			demoState->chatIter++;
 
 			//Message recieved
 			if(demoState->isServer) SendToClient(demoState->peer, &demoState->clientProfiles, *read);
@@ -450,7 +546,8 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 				SendToClient(demoState->peer, &demoState->clientProfiles, send, demoState->clientProfiles.iter);
 			}
 
-			demoState->chatLog.push_back("Client connected with name " + (std::string)demoState->clientProfiles.profiles[demoState->clientProfiles.iter].name);
+			demoState->chatLog[demoState->chatIter] = "Client connected with name " + (std::string)demoState->clientProfiles.profiles[demoState->clientProfiles.iter].name;
+			demoState->chatIter++;
 			demoState->clientProfiles.iter++;
 			break;
 		}
@@ -461,7 +558,8 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			MsgStruct* read = (MsgStruct*)packet->data;
 
 
-			demoState->chatLog.push_back((std::string)read->senderName + " has disconnected");
+			demoState->chatLog[demoState->chatIter] = (std::string)read->senderName + " has disconnected";
+			demoState->chatIter++;
 			demoState->clientProfiles.iter--;
 			break;
 		}
@@ -489,7 +587,8 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			}
 			else
 			{
-				demoState->chatLog.push_back((std::string)read->senderName + " " + read->receiveName + " " + (std::string)read->msg);
+				demoState->chatLog[demoState->chatIter] = (std::string)read->senderName + " " + read->receiveName + " " + (std::string)read->msg;
+				demoState->chatIter++;
 
 				//Message recieved
 				SendToClient(demoState->peer, &demoState->clientProfiles, *read, i);
@@ -502,6 +601,7 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 
 			if (read->currentGame == TIC_TAC_TOE)
 			{
+				demoState->isTTT = true;
 				if (demoState->isPlayer1 == true)//If this is player 1(X Player)
 				{
 					gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_o, read->xPos, read->yPos);//Updates local game with opponent's move
@@ -510,27 +610,44 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 				{
 					gs_tictactoe_setSpaceState(demoState->tttGame, gs_tictactoe_space_x, read->xPos, read->yPos);//Updates local game with opponent's move
 				}
+
+				char tmp[10];
+				if(ttt_getWin(demoState->tttGame) == gs_tictactoe_space_o){
+					strcpy(tmp, "O's win!");
+					demoState->chatLog[demoState->chatIter] = (std::string)tmp;
+					demoState->chatIter++;
+					gs_tictactoe_reset(demoState->tttGame);
+				}
+				else if(ttt_getWin(demoState->tttGame) == gs_tictactoe_space_x){
+					strcpy(tmp, "X's win!");
+					demoState->chatLog[demoState->chatIter] = (std::string)tmp;
+					demoState->chatIter++;
+					gs_tictactoe_reset(demoState->tttGame);
+				}
 				
 				PrintBoardToConsole(demoState);
 			}
-			if (read->currentGame == BATTLESHIP)
+			if (read->currentGame == CHECKERS)
 			{
-				BattleshipReturnPacket send;
+				if (demoState->isPlayer1 == true)//If this is player 1(X Player)
+				{
+					gs_checkers_setSpaceState(demoState->checkersGame, gs_checkers_space_black, read->xPos, read->yPos);//Updates local game with opponent's move
+				}
+				else//If this is player 2(O Player)
+				{
+					gs_checkers_setSpaceState(demoState->checkersGame, gs_checkers_space_white, read->xPos, read->yPos);//Updates local game with opponent's move
+				}
 
-				send.id = (RakNet::MessageID)ID_GAME_MOVE;
-				send.didHit = CheckBattlshipHit(demoState, read->xPos, read->yPos);//If coordinate hits a ship return true
-
-				//Update Local Board to reflect hit or miss
-
-				demoState->peer->Send((char*)& send, sizeof(BattleshipReturnPacket), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);//Send packet telling other player whether they hit or not
-
+				PrintBoardToConsole(demoState);
 			}
 
+			demoState->currentTurn = true;
 			
 			break;
 		}
 		case ID_INVITE:
-			demoState->chatLog.push_back("You are playing the game.");
+			demoState->chatLog[demoState->chatIter] = "You are playing the game.";
+			demoState->chatIter++;
 			demoState->playingGame = true;
 			break;
 		default:
@@ -576,8 +693,9 @@ void c3demoRender(c3_DemoState const* demoState){
 		a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Chat: %s", demoState->str);
 
 		//Draw the chatlog
-		for(int i = 0; i < demoState->chatLog.size(); i++){
-			a3textDraw(demoState->text, -1, -.95 + (.05f) * (demoState->chatLog.size() - i), -1, 1, 1, 1, 1, demoState->chatLog[i].c_str());
+		for(int i = demoState->chatIter; i >= 0; i--){
+			int val = demoState->chatIter - i + 1;
+			a3textDraw(demoState->text, -1, -.95 + (.05) * (val), -1, 1, 1, 1, 1, demoState->chatLog[i].c_str());
 		}
 	}
 	else if(demoState->lobbyStage == 0){
@@ -588,7 +706,7 @@ void c3demoRender(c3_DemoState const* demoState){
 	}
 	else if(demoState->lobbyStage == 2){
 		if(demoState->isServer){
-			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "What Game would you like to play? (B)attleship or (T)ic-Tac-Toe: %s", demoState->str);
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "What Game would you like to play? (C)heckers or (T)ic-Tac-Toe: %s", demoState->str);
 		}
 		else {
 			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: %s", demoState->str);
@@ -628,16 +746,17 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 			return;
 		}
 		else {
-			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "What Game would you like to play? (B)attleship or (T)ic-Tac-Toe: ");
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "What Game would you like to play? (C)heckers or (T)ic-Tac-Toe: ");
 			RakNet::SocketDescriptor sd(60000, 0);
 			demoState->peer->Startup(MAXCLIENTS, &sd, 1);
 			demoState->isServer = true;
+			demoState->currentTurn = true;
 		}
 		demoState->lobbyStage++;
 	}
 	else if(demoState->lobbyStage == 2){
 		if(demoState->isServer){
-			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "What Game would you like to play? (B)attleship or (T)ic-Tac-Toe: %s", demoState->str);
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "What Game would you like to play? (C)heckers or (T)ic-Tac-Toe: %s", demoState->str);
 		}
 		else {
 			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: %s", demoState->str);
@@ -656,8 +775,7 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 			else
 			{
 				//Start Battleship
-				gs_battleship_reset(demoState->battleGameLocal);
-				gs_battleship_reset(demoState->battleGameEnemy);
+				gs_checkers_reset(demoState->checkersGame);
 				demoState->isTTT = false;
 				demoState->isPlayer1 = true;
 			}
@@ -693,7 +811,8 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 			// We need to let the server accept incoming connections from the clients
 			demoState->peer->SetMaximumIncomingConnections(MAXCLIENTS);
 
-			demoState->chatLog.push_back("Starting the server");
+			demoState->chatLog[demoState->chatIter] = "Starting the server";
+			demoState->chatIter++;
 			demoState->inGame = true;
 			demoState->lobbyStage = -1;
 		}
@@ -703,7 +822,8 @@ void c3demoNetworkingLobby(c3_DemoState* demoState)
 			}
 			strcpy(demoState->clientProfiles.profiles[0].name, demoState->str);
 
-			demoState->chatLog.push_back("Starting the client");
+			demoState->chatLog[demoState->chatIter] = "Starting the client";
+			demoState->chatIter++;
 			demoState->peer->Connect(demoState->ip, 60000, 0, 0);
 			demoState->inGame = true;
 			demoState->lobbyStage = -1;
