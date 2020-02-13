@@ -131,6 +131,18 @@
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3DemoState.h">
       <Filter>Source Files\common\C3_DEMO</Filter>
     </ClInclude>
+    <ClInclude Include="c3Event.h">
+      <Filter>Source Files\common\C3_DEMO</Filter>
+    </ClInclude>
+    <ClInclude Include="c3MoveObjectEvent.h">
+      <Filter>Source Files\common\C3_DEMO</Filter>
+    </ClInclude>
+    <ClInclude Include="c3ColorChangeEvent.h">
+      <Filter>Source Files\common\C3_DEMO</Filter>
+    </ClInclude>
+    <ClInclude Include="c3StretchObjectEvent.h">
+      <Filter>Source Files\common\C3_DEMO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\resource\glsl\4x\fs\drawColorAttrib_fs4x.glsl">
