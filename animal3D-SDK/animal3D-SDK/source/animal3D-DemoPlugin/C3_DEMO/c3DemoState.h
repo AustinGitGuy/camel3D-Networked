@@ -157,7 +157,6 @@ const int MAX_CHARACTERS = 127;
 
 		bool isTTT = false;
 		bool isPlayer1 = false;
-
 	};
 
 	void c3demoRender(c3_DemoState const* demoState);
