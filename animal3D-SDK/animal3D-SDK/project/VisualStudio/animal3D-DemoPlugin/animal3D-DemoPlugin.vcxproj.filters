@@ -111,6 +111,9 @@
     <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3Demo.cpp">
       <Filter>Source Files\common\C3_DEMO</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3EventManager.cpp">
+      <Filter>Source Files\common\C3_DEMO</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\a3_dylib_config_export.h">
@@ -129,6 +132,9 @@
       <Filter>Header Files\A3_DEMO\_utilities</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3DemoState.h">
+      <Filter>Source Files\common\C3_DEMO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3EventManager.h">
       <Filter>Source Files\common\C3_DEMO</Filter>
     </ClInclude>
   </ItemGroup>

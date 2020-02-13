@@ -11,6 +11,7 @@
 
 #include "A3_DEMO/a3_Networking/a3_Networking_gs_tictactoe.c"
 #include "A3_DEMO/a3_Networking/a3_Networking_gs_checkers.c"
+#include "C3_DEMO/c3EventManager.h"
 
 enum GameMessages {
 	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE, ID_GAME_MOVE, ID_INVITE
@@ -154,6 +155,8 @@ const int MAX_CHARACTERS = 127;
 		//Game Stuff
 		gs_tictactoe tttGame;
 		gs_checkers checkersGame;
+
+		EventManager* eventManager;
 
 		bool isTTT = false;
 		bool isPlayer1 = false;

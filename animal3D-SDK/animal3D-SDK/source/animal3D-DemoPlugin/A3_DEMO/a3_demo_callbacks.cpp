@@ -38,6 +38,7 @@
 #include "animal3D-A3DM/animal3D-A3DM.h"
 
 #include "C3_DEMO/c3DemoState.h"
+#include "C3_DEMO/c3EventManager.h"
 
 #include "a3_dylib_config_export.h"
 
@@ -217,6 +218,10 @@ A3DYLIBSYMBOL c3_DemoState *a3demoCB_load(c3_DemoState *demoState, a3boolean hot
 
 		demoState->peer = RakNet::RakPeerInterface::GetInstance();
 
+		EventManager::Init();
+
+		demoState->eventManager = EventManager::GetInstance();
+
 		c3demoNetworkingLobby(demoState);
 
 		// create directory for data
@@ -233,7 +238,7 @@ A3DYLIBSYMBOL c3_DemoState *a3demoCB_load(c3_DemoState *demoState, a3boolean hot
 	//	a3demo_loadShaders(demoState);
 
 	//	// scene objects
-	//	a3demo_initScene(demoState);
+		//a3demo_initScene(demoState);
 	}
 
 	//// return persistent state pointer
@@ -265,6 +270,8 @@ A3DYLIBSYMBOL c3_DemoState *a3demoCB_unload(c3_DemoState *demoState, a3boolean h
 		a3textRelease(demoState->text);
 
 		RakNet::RakPeerInterface::DestroyInstance(demoState->peer);
+
+		EventManager::Cleanup();
 
 		// erase other stuff
 		a3trigFree();
