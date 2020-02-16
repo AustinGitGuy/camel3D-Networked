@@ -204,6 +204,7 @@
     <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\A3_DEMO\_utilities\a3_DemoRenderUtils.c" />
     <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\A3_DEMO\_utilities\a3_DemoSceneObject.c" />
     <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3Demo.cpp" />
+    <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3EventManager.cpp" />
     <ClCompile Include="_src_win\main_dll.c" />
   </ItemGroup>
   <ItemGroup>
@@ -212,7 +213,12 @@
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\A3_DEMO\_utilities\a3_DemoSceneObject.h" />
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\A3_DEMO\_utilities\a3_DemoShaderProgram.h" />
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\a3_dylib_config_export.h" />
+    <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3ColorChangeEvent.h" />
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3DemoState.h" />
+    <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3Event.h" />
+    <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3EventManager.h" />
+    <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3MoveObjectEvent.h" />
+    <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3StretchObjectEvent.h" />
     <ClInclude Include="c3ColorChangeEvent.h" />
     <ClInclude Include="c3Event.h" />
     <ClInclude Include="c3MoveObjectEvent.h" />

@@ -32,3 +32,19 @@ void EventManager::DeleteManager(){
 
 	}
 }
+
+Event* EventManager::PopEvent(){
+	Event* event = eventQueue.back();
+	eventQueue.pop();
+	return event;
+}
+
+void EventManager::PushEvent(Event* event){
+	eventQueue.push(event);
+}
+
+void EventManager::ProcessEvents(){
+	while(eventQueue.size() != 0){
+		PopEvent()->dispatch();
+	}
+}

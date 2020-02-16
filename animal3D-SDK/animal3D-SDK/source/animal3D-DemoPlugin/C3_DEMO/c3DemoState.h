@@ -139,13 +139,8 @@ const int MAX_CHARACTERS = 127;
 		UserProfile profile; //This is for the server (if we are client)
 		ProfileList clientProfiles;
 		bool isServer;
-		bool gameTrue;
-		bool currentTurn;
-		bool programTrue = true;//Used to reset back to lobby
 		bool inGame = false;
 		int lobbyStage = 0;
-
-		bool playingGame = false;
 
 		std::string chatLog[100];
 
@@ -155,8 +150,6 @@ const int MAX_CHARACTERS = 127;
 		//Game Stuff
 		gs_tictactoe tttGame;
 		gs_checkers checkersGame;
-
-		EventManager* eventManager;
 
 		bool isTTT = false;
 		bool isPlayer1 = false;
@@ -168,11 +161,7 @@ const int MAX_CHARACTERS = 127;
 
 	void c3demoInput(c3_DemoState* demoState);
 
-	void c3demoNetworkingSend(c3_DemoState const* demoState);
-
 	void c3demoNetworkingRecieve(c3_DemoState* demoState);
-
-	void c3demoNetworkingRecieveNonConst(c3_DemoState* demoState);
 
 	void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, MsgStruct msg, int client);
 

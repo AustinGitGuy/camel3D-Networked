@@ -220,8 +220,6 @@ A3DYLIBSYMBOL c3_DemoState *a3demoCB_load(c3_DemoState *demoState, a3boolean hot
 
 		EventManager::Init();
 
-		demoState->eventManager = EventManager::GetInstance();
-
 		c3demoNetworkingLobby(demoState);
 
 		// create directory for data
@@ -317,6 +315,8 @@ A3DYLIBSYMBOL a3i32 a3demoCB_idle(c3_DemoState *demoState)
 			a3keyboardUpdate(demoState->keyboard);
 			a3XboxControlUpdate(demoState->xcontrol);
 			c3demoNetworkingRecieve(demoState);
+
+			EventManager::GetInstance()->ProcessEvents();
 
 			// render occurred this idle: return +1
 			return +1;
@@ -437,17 +437,20 @@ A3DYLIBSYMBOL void a3demoCB_keyCharPress(c3_DemoState *demoState, a3i32 asciiKey
 		}
 	}
 	else if(asciiKey == 13){
-		if(demoState->inGame){
-			c3demoInput(demoState);
-		}
-		else {
+		if(!demoState->inGame){
 			demoState->lobbyStage++;
 			c3demoNetworkingLobby(demoState);
+		}
+		else {
+			//Anything you want to do in game
 		}
 		demoState->index = 0;
 		for (int i = 0; i < MAX_CHARACTERS; i++) {
 			demoState->str[i] = '\0';
 		}
+	}
+	else if(asciiKey == 27){
+		demoState->exitFlag = 1;
 	}
 	else {
 		if(demoState->index >= MAX_CHARACTERS){
@@ -467,9 +470,7 @@ A3DYLIBSYMBOL void a3demoCB_keyCharPress(c3_DemoState *demoState, a3i32 asciiKey
 //	{
 //		// uncomment to make escape key kill the current demo
 //		// if disabled, use 'exit demo' menu option
-////	case 27: 
-////		demoState->exitFlag = 1;
-////		break;
+////	
 //
 //		// reload (T) or toggle (t) text
 //	case 'T':

@@ -399,45 +399,20 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 	
 }
 
-
-void c3demoNetworkingRecieveNonConst(c3_DemoState* demoState){
-
-	bool running = true;
-
-	RakNet::Packet* packet;
-
-	
-	for (packet = demoState->peer->Receive(); packet; demoState->peer->DeallocatePacket(packet), packet = demoState->peer->Receive()) {
-		switch (packet->data[0]) {
-		case ID_CONNECTION_REQUEST_ACCEPTED: {
-			printf("Our connection request has been accepted.\n");
-
-			demoState->profile.address = packet->systemAddress;
-			demoState->profile.isHost = true;
-			break;
-		}
-		default:
-			printf("Message with identifier %i has arrived.\n", packet->data[0]);
-			break;
-		}
-	}
-}
-
-
 void c3demoRender(c3_DemoState const* demoState){
 
 	//Clear the screen
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	if(demoState->inGame){
-		//Draw the chatroom if we are in
-		a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Chat: %s", demoState->str);
+		////Draw the chatroom if we are in
+		//a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Chat: %s", demoState->str);
 
-		//Draw the chatlog
-		for(int i = demoState->chatIter; i >= 0; i--){
-			int val = demoState->chatIter - i + 1;
-			a3textDraw(demoState->text, -1, -.95 + (.05) * (val), -1, 1, 1, 1, 1, demoState->chatLog[i].c_str());
-		}
+		////Draw the chatlog
+		//for(int i = demoState->chatIter; i >= 0; i--){
+		//	int val = demoState->chatIter - i + 1;
+		//	a3textDraw(demoState->text, -1, -.95 + (.05) * (val), -1, 1, 1, 1, 1, demoState->chatLog[i].c_str());
+		//}
 	}
 	else if(demoState->lobbyStage == 0){
 		a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "C to connect, H to host, Q to quit: %s", demoState->str);
@@ -491,7 +466,6 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 			RakNet::SocketDescriptor sd(60000, 0);
 			demoState->peer->Startup(MAXCLIENTS, &sd, 1);
 			demoState->isServer = true;
-			demoState->currentTurn = true;
 		}
 	}
 	else if(demoState->lobbyStage == 2){
