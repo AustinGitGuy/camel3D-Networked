@@ -22,14 +22,14 @@ EventManager* EventManager::GetInstance(){
 void EventManager::LoadManager(){
 	if(!loaded){
 		//Load the stuff here
-
+		loaded = true;
 	}
 }
 
 void EventManager::DeleteManager(){
 	if(loaded){
 		//Delete the stuff here
-
+		loaded = false;
 	}
 }
 
