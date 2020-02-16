@@ -5,6 +5,7 @@
 #include "RakNet/MessageIdentifiers.h"
 #include "Raknet/BitStream.h"
 #include "Raknet/RakNetTypes.h"
+#include "RakNet/GetTime.h"
 
 #include <vector>
 #include <string>
@@ -13,8 +14,11 @@
 #include "A3_DEMO/a3_Networking/a3_Networking_gs_checkers.c"
 #include "C3_DEMO/c3EventManager.h"
 
+//#include "c3Event.h"
+#include "c3EventManager.h"
+
 enum GameMessages {
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE, ID_GAME_MOVE, ID_INVITE
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE, ID_GAME_MOVE, ID_INVITE, ID_GAME_EVENT, DEFAULT_EVENT_ID, MOVE_EVENT_ID, SCALE_EVENT_ID, COLOR_EVENT_ID
 };
 
 enum UserGameState {
@@ -34,6 +38,16 @@ struct MsgStruct {
 	char senderName[127];
 	char receiveName[127];
 	char msg[127];
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct EventStruct {
+	RakNet::Time timeStamp;
+	unsigned char id;
+	float float1;
+	float float2;
+	float float3;
 };
 #pragma pack(pop)
 
@@ -140,9 +154,12 @@ const int MAX_CHARACTERS = 127;
 		ProfileList clientProfiles;
 		bool isServer;
 		bool inGame = false;
+		bool inConsole = false;
 		int lobbyStage = 0;
 
 		std::string chatLog[100];
+
+		EventManager c3EventManager;
 
 		int chatIter = 0;
 
@@ -166,6 +183,8 @@ const int MAX_CHARACTERS = 127;
 	void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, MsgStruct msg, int client);
 
 	void c3demoNetworkingLobby(c3_DemoState* demoState);
+
+	void c3demoInputLab3(c3_DemoState* demoState, a3i32 asciiKey);
 
 #ifdef __cplusplus
 }

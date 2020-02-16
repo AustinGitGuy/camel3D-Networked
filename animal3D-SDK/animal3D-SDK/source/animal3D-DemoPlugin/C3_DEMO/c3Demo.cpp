@@ -1,4 +1,8 @@
 #include "C3_DEMO/c3DemoState.h"
+#include "c3MoveObjectEvent.h"
+#include "c3ColorChangeEvent.h"
+#include "c3StretchObjectEvent.h"
+
 
 #include <GL/glew.h>
 
@@ -130,7 +134,7 @@ void c3demoUpdate(c3_DemoState const* demoState){
 
 void c3demoInput(c3_DemoState* demoState){
 	//Grab keybaord input and send appropriate command based on them
-
+	
 	char input[127];
 	strcpy(input, demoState->str);
 	if(input[0] != '\n'){
@@ -232,6 +236,7 @@ void c3demoInput(c3_DemoState* demoState){
 			}
 		}
 	}
+	
 }
 
 void c3demoNetworkingRecieve(c3_DemoState* demoState) {
@@ -352,7 +357,25 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			demoState->clientProfiles.iter--;
 			break;
 		}
+		case ID_GAME_EVENT: {
 
+			EventStruct* read = (EventStruct*)packet->data;
+
+			if (read->id == MOVE_EVENT_ID)
+			{
+				MoveObjectEvent* event = new MoveObjectEvent(read->float1, read->float2, read->float3);
+				demoState->c3EventManager.PushEvent(event);
+			}
+			if (read->id == COLOR_EVENT_ID)
+			{
+
+			}
+			if (read->id == SCALE_EVENT_ID)
+			{
+				
+			}
+			break;
+		}
 		case ID_GAME_MESSAGE_PRIVATE: {
 			//Cast it back to a struct to be read
 			MsgStruct* read = (MsgStruct*)packet->data;
@@ -395,6 +418,7 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			printf("Message with identifier %i has arrived.\n", packet->data[0]);
 			break;
 		}
+		
 	}
 	
 }
@@ -507,4 +531,109 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 			demoState->lobbyStage = -1;
 		}
 	}
+}
+
+void c3demoInputLab3(c3_DemoState* demoState, a3i32 asciiKey)
+{
+
+	if (demoState->isServer == false)
+	{
+		if (demoState->inConsole == false)
+		{
+			EventStruct send;
+			
+			send.timeStamp = RakNet::GetTime();
+
+
+			//Positional Movement
+			//Movement in X axis
+			if (asciiKey == 119) //lowercase w
+			{
+				//Move object positive x
+				send.id = (RakNet::MessageID)MOVE_EVENT_ID;
+				
+
+				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+
+			}
+			else if (asciiKey == 115) //lowercase s
+			{
+				//move object negative x
+				send.id = (RakNet::MessageID)MOVE_EVENT_ID;
+
+				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+			}
+			//Movement in Z axis
+			if (asciiKey == 97)// lowercase a
+			{
+				send.id = (RakNet::MessageID)MOVE_EVENT_ID;
+				//move object negative z
+
+				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+			}
+			else if (asciiKey == 100) //lowercase d
+			{
+				//move object positive x
+				send.id = (RakNet::MessageID)MOVE_EVENT_ID;
+
+				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+			}
+			//Movement in Y axis
+			if (asciiKey == 113)// lowercase q
+			{
+				//move object negative y
+				send.id = (RakNet::MessageID)MOVE_EVENT_ID;
+
+				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+			}
+			else if (asciiKey == 101) //lowercase e
+			{
+				//move object positive y
+				send.id = (RakNet::MessageID)MOVE_EVENT_ID;
+
+				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+			}
+
+			//Color Changes
+			if (asciiKey == 103)//lowercase g
+			{
+				//Add to red value
+				send.id = (RakNet::MessageID)COLOR_EVENT_ID;
+
+
+				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+			}
+			if (asciiKey == 104)//lowercase h
+			{
+				//add to green value
+				send.id = (RakNet::MessageID)COLOR_EVENT_ID;
+
+				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+			}
+			if (asciiKey == 106)//lowercase j
+			{
+				//add to blue value
+				send.id = (RakNet::MessageID)COLOR_EVENT_ID;
+
+				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+			}
+
+			//Stretch obj
+			if (asciiKey == 98)//lowercase b
+			{
+				//Stretch height
+				send.id = (RakNet::MessageID)SCALE_EVENT_ID;
+
+				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+			}
+			else if (asciiKey == 110)//lowercase n
+			{
+				//stretch width
+				send.id = (RakNet::MessageID)SCALE_EVENT_ID;
+
+				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+			}
+		}
+	}
+	
 }

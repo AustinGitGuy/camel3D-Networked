@@ -443,6 +443,13 @@ A3DYLIBSYMBOL void a3demoCB_keyCharPress(c3_DemoState *demoState, a3i32 asciiKey
 		}
 		else {
 			//Anything you want to do in game
+
+			//Keyboard inputs for lab3 game
+			c3demoInputLab3(demoState, asciiKey);
+			
+			
+
+
 		}
 		demoState->index = 0;
 		for (int i = 0; i < MAX_CHARACTERS; i++) {

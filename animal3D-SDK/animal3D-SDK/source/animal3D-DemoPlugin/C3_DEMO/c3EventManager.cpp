@@ -33,12 +33,14 @@ void EventManager::DeleteManager(){
 	}
 }
 
+//removes event and returns a pointer to that event
 Event* EventManager::PopEvent(){
 	Event* event = eventQueue.back();
 	eventQueue.pop();
 	return event;
 }
 
+//Adds event to queue
 void EventManager::PushEvent(Event* event){
 	eventQueue.push(event);
 }
