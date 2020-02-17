@@ -377,7 +377,7 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			}
 			
 			MoveObjectEvent event(read->float1, read->float2, read->float3);
-			demoState->c3EventManager.PushEvent(&event);
+			EventManager::GetInstance()->PushEvent(&event);
 			break;
 		}
 		case COLOR_EVENT_ID: {
@@ -389,7 +389,7 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			}
 
 			ColorChangeEvent event(read->float1, read->float2, read->float3);
-			demoState->c3EventManager.PushEvent(&event);
+			EventManager::GetInstance()->PushEvent(&event);
 			break;
 		}
 		case SCALE_EVENT_ID: {
@@ -401,7 +401,7 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			}
 
 			StretchObjectEvent event(read->float1, read->float2, read->float3);
-			demoState->c3EventManager.PushEvent(&event);
+			EventManager::GetInstance()->PushEvent(&event);
 			break;
 		}
 		case ID_GAME_MESSAGE_PRIVATE: {

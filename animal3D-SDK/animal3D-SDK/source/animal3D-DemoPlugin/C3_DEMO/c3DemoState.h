@@ -158,8 +158,6 @@ const int MAX_CHARACTERS = 127;
 
 		std::string chatLog[100];
 
-		EventManager c3EventManager;
-
 		int chatIter = 0;
 
 		//-----------------------------------
