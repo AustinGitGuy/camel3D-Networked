@@ -165,6 +165,7 @@ const int MAX_CHARACTERS = 127;
 		bool isServer;
 		bool inGame = false;
 		bool inConsole = false;
+		bool localSim = false;
 		int lobbyStage = 0;
 
 		std::string chatLog[100];

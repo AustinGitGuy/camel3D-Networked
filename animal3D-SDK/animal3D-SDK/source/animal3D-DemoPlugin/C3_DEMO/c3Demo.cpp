@@ -508,7 +508,7 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 		printf("Lobby called when it shouldn't have!\n");
 	}
 	else if(demoState->lobbyStage == 0){
-		a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "C to connect, H to host, Q to quit: %s", demoState->str);
+		a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "C to connect, H to host, Q to quit, L to locally simulate: %s", demoState->str);
 		return;
 	}
 	else if(demoState->lobbyStage == 1){
@@ -524,7 +524,7 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 			demoState->exitFlag = 1;
 			return;
 		}
-		else {
+		else if((demoState->str[0] == 'h') || (demoState->str[0] == 'H')){
 			// We need to let the server accept incoming connections from the clients
 			demoState->peer->SetMaximumIncomingConnections(MAXCLIENTS);
 
@@ -535,6 +535,13 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 			RakNet::SocketDescriptor sd(60000, 0);
 			demoState->peer->Startup(MAXCLIENTS, &sd, 1);
 			demoState->isServer = true;
+		}
+		else {
+			demoState->chatLog[demoState->chatIter] = "Simulating locally";
+			demoState->chatIter++;
+			demoState->inGame = true;
+			demoState->lobbyStage = -1;
+			demoState->localSim = true;
 		}
 	}
 	else if(demoState->lobbyStage == 2){
