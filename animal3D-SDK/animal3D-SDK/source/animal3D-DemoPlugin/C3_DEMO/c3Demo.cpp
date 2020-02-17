@@ -127,6 +127,18 @@ void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfi
 	}
 }
 
+void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, EventStruct msg, int client = -1) {
+	if (client == -1) {
+		for (int i = 0; i < clientProfiles->iter; i++) {
+			peer->Send((char*)&msg, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, clientProfiles->profiles[i].address, false);
+
+		}
+	}
+	else {
+		peer->Send((char*)&msg, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, clientProfiles->profiles[client].address, false);
+	}
+}
+
 void c3demoUpdate(c3_DemoState const* demoState){
 	//Game loop goes here
 
@@ -358,8 +370,12 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			break;
 		}
 		case MOVE_EVENT_ID: {
-
 			EventStruct* read = (EventStruct*)packet->data;
+
+			if(demoState->isServer){
+				SendToClient(demoState->peer, &demoState->clientProfiles, *read);
+			}
+			
 			MoveObjectEvent event(read->float1, read->float2, read->float3);
 			demoState->c3EventManager.PushEvent(&event);
 			break;
@@ -367,6 +383,11 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 		case COLOR_EVENT_ID: {
 
 			EventStruct* read = (EventStruct*)packet->data;
+
+			if(demoState->isServer){
+				SendToClient(demoState->peer, &demoState->clientProfiles, *read);
+			}
+
 			ColorChangeEvent event(read->float1, read->float2, read->float3);
 			demoState->c3EventManager.PushEvent(&event);
 			break;
@@ -374,6 +395,11 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 		case SCALE_EVENT_ID: {
 
 			EventStruct* read = (EventStruct*)packet->data;
+
+			if(demoState->isServer){
+				SendToClient(demoState->peer, &demoState->clientProfiles, *read);
+			}
+
 			StretchObjectEvent event(read->float1, read->float2, read->float3);
 			demoState->c3EventManager.PushEvent(&event);
 			break;
