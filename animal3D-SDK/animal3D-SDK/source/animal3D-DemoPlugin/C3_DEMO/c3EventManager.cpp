@@ -19,9 +19,10 @@ EventManager* EventManager::GetInstance(){
 	return instance;
 }
 
-void EventManager::LoadManager(){
+void EventManager::LoadManager(c3_DemoState* newState){
 	if(!loaded){
 		//Load the stuff here
+		demoState = newState;
 		loaded = true;
 	}
 }
@@ -46,7 +47,22 @@ void EventManager::PushEvent(Event* event){
 }
 
 void EventManager::ProcessEvents(){
+
+	EventStruct send;
+	send.id = GameMessages::DEFAULT_EVENT_ID;
+	int iter = 0;
+
 	while(eventQueue.size() != 0){
-		PopEvent()->dispatch();
+		Event* event = PopEvent();
+		if(event->type < NUM_EVENT_TYPES && event->type > -1){
+			send.events[iter].type = event->type;
+			event->dispatch(demoState, &send.events[iter]);
+			iter++;
+			delete event;
+		}
+	}
+
+	if(iter > 0){
+		demoState->peer->Send((char*)&send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
 	}
 }

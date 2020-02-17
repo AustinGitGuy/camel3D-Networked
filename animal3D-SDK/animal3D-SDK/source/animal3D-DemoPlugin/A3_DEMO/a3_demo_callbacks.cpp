@@ -173,13 +173,13 @@ A3DYLIBSYMBOL c3_DemoState *a3demoCB_load(c3_DemoState *demoState, a3boolean hot
 	{
 		//Dont hotbuild it break
 		const a3ui32 stateSize = a3demo_getPersistentStateSize();
-		//c3_DemoState copy = *demoState;
+		c3_DemoState copy = *demoState;
 
 		// example 1: copy memory directly
 		free(demoState);
 		demoState = (c3_DemoState *)malloc(stateSize);
 		memset(demoState, 0, stateSize);
-		//*demoState = copy;
+		*demoState = copy;
 
 		a3trigInitSetTables(trigSamplesPerDegree, demoState->trigTable);
 
@@ -217,10 +217,17 @@ A3DYLIBSYMBOL c3_DemoState *a3demoCB_load(c3_DemoState *demoState, a3boolean hot
 		// enable asset streaming between loads
 	//	demoState->streaming = 1;
 
+		demoState->xScale = 0.25f;
+		demoState->yScale = 0.25f;
+
+		demoState->red = 1;
+		demoState->blue = 0;
+		demoState->green = 0;
+
 		demoState->peer = RakNet::RakPeerInterface::GetInstance();
 
 		EventManager::Init();
-		EventManager::GetInstance()->LoadManager();
+		EventManager::GetInstance()->LoadManager(demoState);
 
 		c3demoNetworkingLobby(demoState);
 

@@ -12,14 +12,13 @@ public:
 	StretchObjectEvent(float newWidthScale, float newHeightScale, float newDepthScale);
 	~StretchObjectEvent();
 	
-	void dispatch();
-	void StretchObject(float newWidth, float newHeight, float newDepth);
+	void dispatch(c3_DemoState* demoState, EventTypeStruct* event);
 
 private:
 
 	float mScaleWidth;
 	float mScaleHeight;
-	float mDepthScale;
+	float mScaleDepth;
 
 };
 
@@ -27,14 +26,16 @@ StretchObjectEvent::StretchObjectEvent()
 {
 	mScaleHeight = 1.0;
 	mScaleWidth = 1.0;
-	mDepthScale = 1.0;
+	mScaleDepth = 1.0;
+	type = EventType::STRETCH_EVENT;
 }
 
 StretchObjectEvent::StretchObjectEvent(float newWidthScale, float newHeightScale, float newDepthScale)
 {
 	mScaleHeight = newHeightScale;
 	mScaleWidth = newWidthScale;
-	mDepthScale = newDepthScale;
+	mScaleDepth = newDepthScale;
+	type = EventType::STRETCH_EVENT;
 }
 
 StretchObjectEvent::~StretchObjectEvent()
@@ -42,14 +43,18 @@ StretchObjectEvent::~StretchObjectEvent()
 }
 
 //Sends event into queue????  or Activate Event's functionality?????
-void StretchObjectEvent::dispatch()
+void StretchObjectEvent::dispatch(c3_DemoState* demoState, EventTypeStruct* event)
 {
-	StretchObject(mScaleWidth, mScaleHeight, mDepthScale);
-}
+	demoState->xScale += mScaleWidth;
+	demoState->yScale += mScaleHeight;
 
-void StretchObjectEvent::StretchObject(float newWidth, float newHeight, float newDepth)
-{
-	//stretch height and width for object
+
+	if(demoState->xScale < 0.25f) demoState->xScale = .25f;
+	if(demoState->yScale < 0.25f) demoState->yScale = .25f;
+
+	event->float1 = mScaleWidth;
+	event->float2 = mScaleHeight;
+	event->float3 = mScaleDepth;
 }
 
 #endif

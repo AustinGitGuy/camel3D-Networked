@@ -12,9 +12,7 @@ public:
 	MoveObjectEvent(float newX, float newY, float newZ);
 	~MoveObjectEvent();
 
-	void dispatch();
-
-	void MoveObject(float newX, float newY, float newZ);
+	void dispatch(c3_DemoState* demoState, EventTypeStruct* event);
 
 private:
 	float mXPos, mYPos, mZPos;
@@ -23,15 +21,16 @@ private:
 
 MoveObjectEvent::MoveObjectEvent()
 {
+	type = EventType::MOVE_EVENT;
 	mXPos = 0.0;
 	mYPos = 0.0;
 	mZPos = 0.0;
-
 }
 
 //Overload for Default constructor.  Takes in information for objects new position
 MoveObjectEvent::MoveObjectEvent(float newX, float newY, float newZ)
 {
+	type = EventType::MOVE_EVENT;
 	mXPos = newX;
 	mYPos = newY;
 	mZPos = newZ;
@@ -43,15 +42,14 @@ MoveObjectEvent::~MoveObjectEvent()
 }
 
 //Sends event into queue????  or Activate Event's functionality?????
-void MoveObjectEvent::dispatch()
+void MoveObjectEvent::dispatch(c3_DemoState* demoState, EventTypeStruct* event)
 {
-	MoveObject(mXPos, mYPos, mZPos);
-}
+	demoState->xPos += mXPos;
+	demoState->yPos += mYPos;
 
-void MoveObjectEvent::MoveObject(float newX, float newY, float newZ)
-{
-	//Set objects new transformposition equal to inputted values
-
+	event->float1 = mXPos;
+	event->float2 = mYPos;
+	event->float3 = mZPos;
 }
 
 #endif

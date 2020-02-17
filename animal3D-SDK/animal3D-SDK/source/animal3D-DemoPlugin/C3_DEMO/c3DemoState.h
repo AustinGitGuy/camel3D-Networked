@@ -15,10 +15,13 @@
 #include "C3_DEMO/c3EventManager.h"
 
 //#include "c3Event.h"
-#include "c3EventManager.h"
+
+#ifndef __CAMEL3D_DEMOSTATE_H
+#define __CAMEL3D_DEMOSTATE_H
+
 
 enum GameMessages {
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE, ID_GAME_MOVE, ID_INVITE, ID_GAME_EVENT, DEFAULT_EVENT_ID, MOVE_EVENT_ID, SCALE_EVENT_ID, COLOR_EVENT_ID
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE, ID_GAME_MOVE, ID_INVITE, ID_GAME_EVENT, DEFAULT_EVENT_ID
 };
 
 enum UserGameState {
@@ -27,14 +30,27 @@ enum UserGameState {
 
 enum ActiveGame{
 	TIC_TAC_TOE, CHECKERS
+};
 
+enum EventType {
+	NULL_TYPE, MOVE_EVENT, STRETCH_EVENT, COLORCHANGE_EVENT, CLONE_EVENT, NUM_EVENT_TYPES
 };
 
 const unsigned int MAXCLIENTS = 10;
 
+const int EVENT_SIZE = 10;
+
+#pragma pack(push, 1)
+struct EventTypeStruct {
+	EventType type = NULL_TYPE;
+	float float1, float2, float3;
+};
+#pragma pack(pop)
+
 #pragma pack(push, 1)
 struct MsgStruct {
 	unsigned char id;
+
 	char senderName[127];
 	char receiveName[127];
 	char msg[127];
@@ -43,11 +59,9 @@ struct MsgStruct {
 
 #pragma pack(push, 1)
 struct EventStruct {
-	RakNet::Time timeStamp;
 	unsigned char id;
-	float float1;
-	float float2;
-	float float3;
+	EventTypeStruct events[EVENT_SIZE];
+	RakNet::Time timeStamp;
 };
 #pragma pack(pop)
 
@@ -77,9 +91,6 @@ struct ProfileList {
 	UserProfile profiles[MAXCLIENTS];
 	int iter = 0;
 };
-
-#ifndef __CAMEL3D_DEMOSTATE_H
-#define __CAMEL3D_DEMOSTATE_H
 
 #ifdef __cplusplus
 extern "C"
@@ -167,6 +178,13 @@ const int MAX_CHARACTERS = 127;
 
 		bool isTTT = false;
 		bool isPlayer1 = false;
+
+		float xPos = 0, yPos = 0;
+		float xScale = 0.25f, yScale = 0.25f;
+
+		float red, blue, green;
+
+		int numCubes = 0;
 	};
 
 	void c3demoRender(c3_DemoState const* demoState);

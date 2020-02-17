@@ -2,7 +2,7 @@
 #include "c3MoveObjectEvent.h"
 #include "c3ColorChangeEvent.h"
 #include "c3StretchObjectEvent.h"
-
+#include "c3CloneObjectEvent.h"
 
 #include <GL/glew.h>
 
@@ -103,7 +103,7 @@ void DisplayAllCommands()
 	DisplayCommandsChat();
 }
 
-void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, MsgStruct msg, int client = -1) {
+void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, MsgStruct msg, int client = -1){
 	if (client == -1) {
 		for (int i = 0; i < clientProfiles->iter; i++) {
 			peer->Send((char*)&msg, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, clientProfiles->profiles[i].address, false);
@@ -115,7 +115,7 @@ void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfi
 	}
 }
 
-void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, GameMove msg, int client = -1) {
+void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, GameMove msg, int client = -1){
 	if (client == -1) {
 		for (int i = 0; i < clientProfiles->iter; i++) {
 			peer->Send((char*)&msg, sizeof(GameMove), HIGH_PRIORITY, RELIABLE_ORDERED, 0, clientProfiles->profiles[i].address, false);
@@ -127,15 +127,12 @@ void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfi
 	}
 }
 
-void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, EventStruct msg, int client = -1) {
-	if (client == -1) {
-		for (int i = 0; i < clientProfiles->iter; i++) {
-			peer->Send((char*)&msg, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, clientProfiles->profiles[i].address, false);
-
-		}
+void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, EventStruct msg, RakNet::SystemAddress notSend = RakNet::UNASSIGNED_SYSTEM_ADDRESS){
+	if(notSend == RakNet::UNASSIGNED_SYSTEM_ADDRESS){
+		peer->Send((char*)&msg, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, NULL, true);
 	}
 	else {
-		peer->Send((char*)&msg, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, clientProfiles->profiles[client].address, false);
+		peer->Send((char*)&msg, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, notSend, true);
 	}
 }
 
@@ -363,45 +360,36 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			//Since this is the server we can still use the profileList struct
 			MsgStruct* read = (MsgStruct*)packet->data;
 
-
 			demoState->chatLog[demoState->chatIter] = (std::string)read->senderName + " has disconnected";
 			demoState->chatIter++;
 			demoState->clientProfiles.iter--;
 			break;
 		}
-		case MOVE_EVENT_ID: {
+		case DEFAULT_EVENT_ID: {
 			EventStruct* read = (EventStruct*)packet->data;
 
 			if(demoState->isServer){
-				SendToClient(demoState->peer, &demoState->clientProfiles, *read);
-			}
-			
-			MoveObjectEvent event(read->float1, read->float2, read->float3);
-			EventManager::GetInstance()->PushEvent(&event);
-			break;
-		}
-		case COLOR_EVENT_ID: {
-
-			EventStruct* read = (EventStruct*)packet->data;
-
-			if(demoState->isServer){
-				SendToClient(demoState->peer, &demoState->clientProfiles, *read);
+				SendToClient(demoState->peer, &demoState->clientProfiles, *read, packet->systemAddress);
 			}
 
-			ColorChangeEvent event(read->float1, read->float2, read->float3);
-			EventManager::GetInstance()->PushEvent(&event);
-			break;
-		}
-		case SCALE_EVENT_ID: {
-
-			EventStruct* read = (EventStruct*)packet->data;
-
-			if(demoState->isServer){
-				SendToClient(demoState->peer, &demoState->clientProfiles, *read);
+			for(int i = 0; i < EVENT_SIZE; i++){
+				if(read->events[i].type == MOVE_EVENT){
+					MoveObjectEvent* event = new MoveObjectEvent(read->events[i].float1, read->events[i].float2, read->events[i].float3);
+					EventManager::GetInstance()->PushEvent(event);
+				}
+				else if (read->events[i].type == COLORCHANGE_EVENT){
+					ColorChangeEvent* event = new ColorChangeEvent(read->events[i].float1, read->events[i].float2, read->events[i].float3);
+					EventManager::GetInstance()->PushEvent(event);
+				}
+				else if (read->events[i].type == STRETCH_EVENT){
+					StretchObjectEvent* event = new StretchObjectEvent(read->events[i].float1, read->events[i].float2, read->events[i].float3);
+					EventManager::GetInstance()->PushEvent(event);
+				}
+				else if(read->events[i].type == CLONE_EVENT){
+					CloneObjectEvent* event = new CloneObjectEvent();
+					EventManager::GetInstance()->PushEvent(event);
+				}
 			}
-
-			StretchObjectEvent event(read->float1, read->float2, read->float3);
-			EventManager::GetInstance()->PushEvent(&event);
 			break;
 		}
 		case ID_GAME_MESSAGE_PRIVATE: {
@@ -456,6 +444,7 @@ void c3demoRender(c3_DemoState const* demoState){
 	//Clear the screen
 
 	glClear(GL_COLOR_BUFFER_BIT);
+
 	if(demoState->inGame){
 		////Draw the chatroom if we are in
 		//a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Chat: %s", demoState->str);
@@ -465,6 +454,28 @@ void c3demoRender(c3_DemoState const* demoState){
 		//	int val = demoState->chatIter - i + 1;
 		//	a3textDraw(demoState->text, -1, -.95 + (.05) * (val), -1, 1, 1, 1, 1, demoState->chatLog[i].c_str());
 		//}
+
+		for(int i = 0; i < demoState->numCubes; i++){
+			if(i == 0){
+				glColor3f(demoState->red, demoState->blue, demoState->green);
+				glBegin(GL_QUADS);
+				glVertex2f(demoState->xPos - demoState->xScale, demoState->yPos + demoState->yScale);
+				glVertex2f(demoState->xPos - demoState->xScale, demoState->yPos - demoState->yScale);
+				glVertex2f(demoState->xPos + demoState->xScale, demoState->yPos - demoState->yScale);
+				glVertex2f(demoState->xPos + demoState->xScale, demoState->yPos + demoState->yScale);
+				glEnd();
+			}
+			
+			if(i > 0){
+				glColor3f(demoState->red, demoState->blue, demoState->green);
+				glBegin(GL_QUADS);
+				glVertex2f(0 - demoState->xScale, 0 + demoState->yScale);
+				glVertex2f(0 - demoState->xScale, 0 - demoState->yScale);
+				glVertex2f(0 + demoState->xScale, 0 - demoState->yScale);
+				glVertex2f(0 + demoState->xScale, 0 + demoState->yScale);
+				glEnd();
+			}
+		}
 	}
 	else if(demoState->lobbyStage == 0){
 		a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "C to connect, H to host, Q to quit: %s", demoState->str);
@@ -573,160 +584,108 @@ void c3demoInputLab3(c3_DemoState* demoState, a3i32 asciiKey)
 			send.timeStamp = RakNet::GetTime();
 
 			//Positional Movement
-			//Movement in X axis
+			//Movement in Y axis
 			if (asciiKey == 119) //lowercase w
 			{
-				//Move object positive x
-				send.id = (RakNet::MessageID)MOVE_EVENT_ID;
-
-				send.float1 = 1;
-				send.float2 = 0;
-				send.float3 = 0;
-
-				printf("Sending the positive x movement packet\n");
-
-				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+				//Move object positive y
+				MoveObjectEvent* event = new MoveObjectEvent(0, 1, 0);
+				EventManager::GetInstance()->PushEvent(event);
 
 			}
 			else if (asciiKey == 115) //lowercase s
 			{
-				//move object negative x
-				send.id = (RakNet::MessageID)MOVE_EVENT_ID;
-
-				send.float1 = -1;
-				send.float2 = 0;
-				send.float3 = 0;
-
-				printf("Sending the negative x movement packet\n");
-
-				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+				//move object negative y
+				MoveObjectEvent* event = new MoveObjectEvent(0, -1, 0);
+				EventManager::GetInstance()->PushEvent(event);
 			}
-			//Movement in Z axis
+			//Movement in X axis
 			if (asciiKey == 97)// lowercase a
 			{
-				//move object negative z
-				send.id = (RakNet::MessageID)MOVE_EVENT_ID;
-
-				send.float1 = 0;
-				send.float2 = 0;
-				send.float3 = -1;
-
-				printf("Sending the negative z movement packet\n");
-
-				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+				//move object negative x
+				MoveObjectEvent* event = new MoveObjectEvent(-1, 0, 0);
+				EventManager::GetInstance()->PushEvent(event);
 			}
 			else if (asciiKey == 100) //lowercase d
 			{
-				//move object positive z
-				send.id = (RakNet::MessageID)MOVE_EVENT_ID;
-				
-				send.float1 = 0;
-				send.float2 = 0;
-				send.float3 = 1;
-
-				printf("Sending the positive z movement packet\n");
-				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+				//move object positive x
+				MoveObjectEvent* event = new MoveObjectEvent(1, 0, 0);
+				EventManager::GetInstance()->PushEvent(event);
 			}
-			//Movement in Y axis
+			//Movement in Z axis
 			if (asciiKey == 113)// lowercase q
 			{
-				//move object positive y
-				send.id = (RakNet::MessageID)MOVE_EVENT_ID;
-				
-				send.float1 = 0;
-				send.float2 = 1;
-				send.float3 = 0;
-
-				printf("Sending the positive y movement packet\n");
-				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+				//move object positive z
+				MoveObjectEvent* event = new MoveObjectEvent(0, 0, 1);
+				EventManager::GetInstance()->PushEvent(event);
 			}
 			else if (asciiKey == 101) //lowercase e
 			{
-				//move object negative y
-				send.id = (RakNet::MessageID)MOVE_EVENT_ID;
-
-				send.float1 = 0;
-				send.float2 = -1;
-				send.float3 = 0;
-
-				printf("Sending the negative y movement packet\n");
-				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+				//move object negative z
+				MoveObjectEvent* event = new MoveObjectEvent(0, 0, -1);
+				EventManager::GetInstance()->PushEvent(event);
 			}
 
 			//Color Changes
 			if (asciiKey == 114)//lowercase r
 			{
-				//Add to red value
-				send.id = (RakNet::MessageID)COLOR_EVENT_ID;
-
-				send.float1 = 1;
-				send.float2 = 0;
-				send.float3 = 0;
-
-				printf("Sending the color change red packet\n");
-				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+				ColorChangeEvent* event = new ColorChangeEvent(1, 0, 0);
+				EventManager::GetInstance()->PushEvent(event);
 			}
 			if (asciiKey == 103)//lowercase g
 			{
-				//add to green value
-				send.id = (RakNet::MessageID)COLOR_EVENT_ID;
-
-				send.float1 = 0;
-				send.float2 = 1;
-				send.float3 = 0;
-
-				printf("Sending the color change green packet\n");
-				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+				ColorChangeEvent* event = new ColorChangeEvent(0, 1, 0);
+				EventManager::GetInstance()->PushEvent(event);
 			}
 			if (asciiKey == 98)//lowercase b
 			{
-				//add to blue value
-				send.id = (RakNet::MessageID)COLOR_EVENT_ID;
-
-				send.float1 = 0;
-				send.float2 = 0;
-				send.float3 = 1;
-
-				printf("Sending the color change blue packet\n");
-				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+				ColorChangeEvent* event = new ColorChangeEvent(0, 0, 1);
+				EventManager::GetInstance()->PushEvent(event);
 			}
 
 			//Stretch obj
-			if (asciiKey == 98)//lowercase b
+			if (asciiKey == 106)//lowercase j
 			{
 				//Stretch height
-				send.id = (RakNet::MessageID)SCALE_EVENT_ID;
-
-				send.float1 = 0;
-				send.float2 = 1;
-				send.float3 = 0;
-
-				printf("Sending the height scale packet\n");
-				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+				StretchObjectEvent* event = new StretchObjectEvent(0, .25f, 0);
+				EventManager::GetInstance()->PushEvent(event);
 			}
-			else if (asciiKey == 109)//lowercase m
+			else if (asciiKey == 107)//lowercase k
 			{
 				//stretch width
-				send.id = (RakNet::MessageID)SCALE_EVENT_ID;
-
-				send.float1 = 1;
-				send.float2 = 0;
-				send.float3 = 0;
-
-				printf("Sending the width scale packet\n");
-				demoState->peer->Send((char*)& send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+				StretchObjectEvent* event = new StretchObjectEvent(.25f, 0, 0);
+				EventManager::GetInstance()->PushEvent(event);
 			}
-			else if (asciiKey == 110)//lowercase m
+			else if (asciiKey == 108)//lowercase l
 			{
 				//stretch depth
-				send.id = (RakNet::MessageID)SCALE_EVENT_ID;
+				StretchObjectEvent* event = new StretchObjectEvent(0, 0, .25f);
+				EventManager::GetInstance()->PushEvent(event);
+			}
 
-				send.float1 = 0;
-				send.float2 = 0;
-				send.float3 = 1;
+			else if (asciiKey == 105)//lowercase i
+			{
+				//Stretch height
+				StretchObjectEvent* event = new StretchObjectEvent(0, -.25f, 0);
+				EventManager::GetInstance()->PushEvent(event);
+			}
+			else if (asciiKey == 111)//lowercase k
+			{
+				//stretch width
+				StretchObjectEvent* event = new StretchObjectEvent(-.25f, 0, 0);
+				EventManager::GetInstance()->PushEvent(event);
+			}
+			else if (asciiKey == 112)//lowercase p
+			{
+				//stretch depth
+				StretchObjectEvent* event = new StretchObjectEvent(0, 0, -.25f);
+				EventManager::GetInstance()->PushEvent(event);
+			}
 
-				printf("Sending the depth scale packet\n");
-				demoState->peer->Send((char*)&send, sizeof(EventStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+
+			else if (asciiKey == 122) //lowercase z
+			{
+				CloneObjectEvent* event = new CloneObjectEvent();
+				EventManager::GetInstance()->PushEvent(event);
 			}
 		}
 	}
