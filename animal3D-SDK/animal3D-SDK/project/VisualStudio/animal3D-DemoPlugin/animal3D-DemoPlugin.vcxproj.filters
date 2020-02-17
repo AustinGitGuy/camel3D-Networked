@@ -137,15 +137,6 @@
     <ClInclude Include="c3Event.h">
       <Filter>Source Files\common\C3_DEMO</Filter>
     </ClInclude>
-    <ClInclude Include="c3MoveObjectEvent.h">
-      <Filter>Source Files\common\C3_DEMO</Filter>
-    </ClInclude>
-    <ClInclude Include="c3ColorChangeEvent.h">
-      <Filter>Source Files\common\C3_DEMO</Filter>
-    </ClInclude>
-    <ClInclude Include="c3StretchObjectEvent.h">
-      <Filter>Source Files\common\C3_DEMO</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3EventManager.h">
       <Filter>Source Files\common\C3_DEMO</Filter>
     </ClInclude>

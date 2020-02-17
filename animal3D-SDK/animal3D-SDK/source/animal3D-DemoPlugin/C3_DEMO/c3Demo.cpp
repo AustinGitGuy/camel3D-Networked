@@ -368,28 +368,34 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 		case DEFAULT_EVENT_ID: {
 			EventStruct* read = (EventStruct*)packet->data;
 
-			if(demoState->isServer){
-				SendToClient(demoState->peer, &demoState->clientProfiles, *read, packet->systemAddress);
-			}
-
-			for(int i = 0; i < EVENT_SIZE; i++){
-				if(read->events[i].type == MOVE_EVENT){
+			for (int i = 0; i < EVENT_SIZE; i++){
+				if (read->events[i].type == MOVE_EVENT){
 					MoveObjectEvent* event = new MoveObjectEvent(read->events[i].float1, read->events[i].float2, read->events[i].float3);
+					event->sent = false;
 					EventManager::GetInstance()->PushEvent(event);
 				}
 				else if (read->events[i].type == COLORCHANGE_EVENT){
 					ColorChangeEvent* event = new ColorChangeEvent(read->events[i].float1, read->events[i].float2, read->events[i].float3);
+					event->sent = false;
 					EventManager::GetInstance()->PushEvent(event);
 				}
 				else if (read->events[i].type == STRETCH_EVENT){
 					StretchObjectEvent* event = new StretchObjectEvent(read->events[i].float1, read->events[i].float2, read->events[i].float3);
+					event->sent = false;
 					EventManager::GetInstance()->PushEvent(event);
 				}
-				else if(read->events[i].type == CLONE_EVENT){
+				else if (read->events[i].type == CLONE_EVENT){
 					CloneObjectEvent* event = new CloneObjectEvent();
+					event->sent = false;
 					EventManager::GetInstance()->PushEvent(event);
 				}
 			}
+
+			if(demoState->isServer){
+				SendToClient(demoState->peer, &demoState->clientProfiles, *read, packet->systemAddress);
+			}
+
+			
 			break;
 		}
 		case ID_GAME_MESSAGE_PRIVATE: {
