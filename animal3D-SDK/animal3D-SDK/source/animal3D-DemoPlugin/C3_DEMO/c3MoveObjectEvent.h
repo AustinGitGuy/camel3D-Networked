@@ -2,10 +2,10 @@
 #include "c3EventManager.h"
 #include "c3Event.h"
 
+#ifndef MOVEOBJECT_EVENT
+#define MOVEOBJECT_EVENT
 
-
-
-class MoveObjectEvent : Event
+class MoveObjectEvent : public Event
 {
 public:
 	MoveObjectEvent();
@@ -17,15 +17,12 @@ public:
 	void MoveObject(float newX, float newY, float newZ);
 
 private:
-
-	EventType mEventID;
 	float mXPos, mYPos, mZPos;
 
 };
 
 MoveObjectEvent::MoveObjectEvent()
 {
-	mEventID = MOVE_EVENT_ID;
 	mXPos = 0.0;
 	mYPos = 0.0;
 	mZPos = 0.0;
@@ -35,7 +32,6 @@ MoveObjectEvent::MoveObjectEvent()
 //Overload for Default constructor.  Takes in information for objects new position
 MoveObjectEvent::MoveObjectEvent(float newX, float newY, float newZ)
 {
-	mEventID = MOVE_EVENT_ID;
 	mXPos = newX;
 	mYPos = newY;
 	mZPos = newZ;
@@ -57,3 +53,5 @@ void MoveObjectEvent::MoveObject(float newX, float newY, float newZ)
 	//Set objects new transformposition equal to inputted values
 
 }
+
+#endif

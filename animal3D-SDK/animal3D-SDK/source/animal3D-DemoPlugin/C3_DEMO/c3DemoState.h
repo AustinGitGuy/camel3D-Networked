@@ -78,7 +78,6 @@ struct ProfileList {
 	int iter = 0;
 };
 
-
 #ifndef __CAMEL3D_DEMOSTATE_H
 #define __CAMEL3D_DEMOSTATE_H
 

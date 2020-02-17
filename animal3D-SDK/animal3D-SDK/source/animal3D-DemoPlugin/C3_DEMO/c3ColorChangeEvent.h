@@ -1,7 +1,10 @@
 #pragma once
 #include "c3Event.h"
 
-class ColorChangeEvent : Event
+#ifndef COLORCHANGE_EVENT
+#define COLORCHANGE_EVENT
+
+class ColorChangeEvent : public Event
 {
 public:
 	ColorChangeEvent();
@@ -13,8 +16,6 @@ public:
 	void ColorChange(float r, float g, float b);
 
 private:
-
-	EventType mEventID;
 	float mRed;
 	float mGreen;
 	float mBlue;
@@ -23,7 +24,6 @@ private:
 
 ColorChangeEvent::ColorChangeEvent()
 {
-	mEventID = COLOR_EVENT_ID;
 	mRed = 0.0;
 	mGreen = 0.0;
 	mBlue = 0.0;
@@ -32,7 +32,6 @@ ColorChangeEvent::ColorChangeEvent()
 //Overload for Default constructor.  Takes in information for objects new color
 ColorChangeEvent::ColorChangeEvent(float r, float g, float b)
 {
-	mEventID = COLOR_EVENT_ID;
 	mRed = r;
 	mGreen = g;
 	mBlue = b;
@@ -55,3 +54,5 @@ void ColorChangeEvent::ColorChange(float r, float g, float b)
 
 
 }
+
+#endif

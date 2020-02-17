@@ -171,14 +171,15 @@ A3DYLIBSYMBOL c3_DemoState *a3demoCB_load(c3_DemoState *demoState, a3boolean hot
 	//// do any re-allocation tasks
 	if (demoState && hotbuild)
 	{
+		//Dont hotbuild it break
 		const a3ui32 stateSize = a3demo_getPersistentStateSize();
-		c3_DemoState copy = *demoState;
+		//c3_DemoState copy = *demoState;
 
 		// example 1: copy memory directly
 		free(demoState);
 		demoState = (c3_DemoState *)malloc(stateSize);
 		memset(demoState, 0, stateSize);
-		*demoState = copy;
+		//*demoState = copy;
 
 		a3trigInitSetTables(trigSamplesPerDegree, demoState->trigTable);
 
@@ -219,6 +220,7 @@ A3DYLIBSYMBOL c3_DemoState *a3demoCB_load(c3_DemoState *demoState, a3boolean hot
 		demoState->peer = RakNet::RakPeerInterface::GetInstance();
 
 		EventManager::Init();
+		EventManager::GetInstance()->LoadManager();
 
 		c3demoNetworkingLobby(demoState);
 
@@ -269,6 +271,7 @@ A3DYLIBSYMBOL c3_DemoState *a3demoCB_unload(c3_DemoState *demoState, a3boolean h
 
 		RakNet::RakPeerInterface::DestroyInstance(demoState->peer);
 
+		EventManager::GetInstance()->DeleteManager();
 		EventManager::Cleanup();
 
 		// erase other stuff
@@ -429,6 +432,9 @@ A3DYLIBSYMBOL void a3demoCB_keyCharPress(c3_DemoState *demoState, a3i32 asciiKey
 	// persistent state update
 	a3keyboardSetStateASCII(demoState->keyboard, (a3byte)asciiKey);
 
+	//Keyboard inputs for lab3 game
+	if(demoState->inGame) c3demoInputLab3(demoState, asciiKey);
+
 	if(asciiKey == 8){
 		demoState->str[demoState->index] = '\0';
 		demoState->index--;
@@ -441,16 +447,7 @@ A3DYLIBSYMBOL void a3demoCB_keyCharPress(c3_DemoState *demoState, a3i32 asciiKey
 			demoState->lobbyStage++;
 			c3demoNetworkingLobby(demoState);
 		}
-		else {
-			//Anything you want to do in game
 
-			//Keyboard inputs for lab3 game
-			c3demoInputLab3(demoState, asciiKey);
-			
-			
-
-
-		}
 		demoState->index = 0;
 		for (int i = 0; i < MAX_CHARACTERS; i++) {
 			demoState->str[i] = '\0';
