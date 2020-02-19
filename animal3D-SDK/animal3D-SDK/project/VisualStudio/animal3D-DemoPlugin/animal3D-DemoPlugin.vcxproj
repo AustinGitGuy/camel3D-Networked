@@ -205,6 +205,7 @@
     <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\A3_DEMO\_utilities\a3_DemoSceneObject.c" />
     <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3Demo.cpp" />
     <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3EventManager.cpp" />
+    <ClCompile Include="Flock.cpp" />
     <ClCompile Include="_src_win\main_dll.c" />
   </ItemGroup>
   <ItemGroup>
@@ -221,6 +222,7 @@
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3MoveObjectEvent.h" />
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3StretchObjectEvent.h" />
     <ClInclude Include="c3Event.h" />
+    <ClInclude Include="c3Flock.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\resource\glsl\4x\fs\drawColorAttrib_fs4x.glsl" />
