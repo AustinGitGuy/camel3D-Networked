@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <vector>
+#include "Vector3.h"
 
 struct Boid
 {
