@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-struct Bird
+struct Boid
 {
 	float xPos,yPos;
 	float angle;
@@ -25,11 +25,16 @@ public:
 	//Adds bird to Flocklist
 	void addBird(float startX, float startY, float startAngle);
 
+	void SeperateBoids();
+	void AlignBoids();
+	void GroupBoids();
+
+	float calcBoidDist(const Boid* firstBoid, const Boid* secondBoid);
 
 
 private:
 
-	std::vector<Bird> mFlock;
+	std::vector<Boid> mFlock;
 
 
 
