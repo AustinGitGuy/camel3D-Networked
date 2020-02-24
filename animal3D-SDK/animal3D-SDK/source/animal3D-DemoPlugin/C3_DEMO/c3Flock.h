@@ -8,7 +8,7 @@ struct Boid
 {
 	float xPos,yPos;
 	float angle;
-
+	Vector3 color;
 
 };
 
@@ -20,11 +20,11 @@ public:
 	~Flock();
 
 
-	//Will iterate through vector of bird in order to update their positions
+	//Will iterate through vector of boids in order to update their positions
 	void UpdateFlock();
 
 	//Adds bird to Flocklist
-	void addBird(float startX, float startY, float startAngle);
+	void addBird(Vector3 position, float startAngle);
 
 	void SeperateBoids();
 	void AlignBoids();

@@ -1,0 +1,20 @@
+use export header (might not work with unity 100%)
+Tag functions you want to be used by using __declspec(dllexport)
+
+Unity has import tag
+
+put tag in front of function declarations
+
+using system.runtime.interopservices
+
+[DLLImport(pluginname)]
+static extern public int foo(int bar)
+
+Can call function globally becasue it is a stiatic class
+
+
+pointer is fundementally an integer
+or netowrking manager become behind the scenes (it becomes a singleton, redefine header fucntions that use it so that it does not use them)
+
+float pointers C lang
+Martialing

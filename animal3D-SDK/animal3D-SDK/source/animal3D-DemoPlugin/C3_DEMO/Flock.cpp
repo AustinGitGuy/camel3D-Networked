@@ -13,13 +13,14 @@ void Flock::UpdateFlock()
 
 }
 
-void Flock::addBird(float startX, float startY, float startAngle)
+void Flock::addBird(Vector3 position, float startAngle)
 {
+
 	Boid bird = Boid();
 
 	//Add starting data to Bird
-	bird.xPos = startX;
-	bird.yPos = startY;
+	bird.xPos = position.x;
+	bird.yPos = position.y;
 
 	bird.angle = startAngle;
 

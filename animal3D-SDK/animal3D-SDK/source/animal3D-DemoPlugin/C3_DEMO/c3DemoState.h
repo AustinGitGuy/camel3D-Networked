@@ -14,6 +14,9 @@
 #include "A3_DEMO/a3_Networking/a3_Networking_gs_checkers.c"
 #include "C3_DEMO/c3EventManager.h"
 
+#include "c3Flock.h"
+
+
 //#include "c3Event.h"
 
 #ifndef __CAMEL3D_DEMOSTATE_H
@@ -180,12 +183,18 @@ const int MAX_CHARACTERS = 127;
 		bool isTTT = false;
 		bool isPlayer1 = false;
 
+		//Lab3
 		float xPos = 0, yPos = 0;
 		float xScale = 0.25f, yScale = 0.25f;
-
 		float red, blue, green;
-
 		int numCubes = 0;
+
+
+		//Proj2
+		Flock flock;
+
+
+
 	};
 
 	void c3demoRender(c3_DemoState const* demoState);
