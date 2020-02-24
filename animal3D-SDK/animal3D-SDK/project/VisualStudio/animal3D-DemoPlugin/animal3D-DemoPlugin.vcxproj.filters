@@ -114,7 +114,10 @@
     <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3EventManager.cpp">
       <Filter>Source Files\common\C3_DEMO</Filter>
     </ClCompile>
-    <ClCompile Include="Flock.cpp">
+    <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\Vector3.cpp">
+      <Filter>Source Files\common\C3_DEMO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\Flock.cpp">
       <Filter>Source Files\common\C3_DEMO</Filter>
     </ClCompile>
   </ItemGroup>
@@ -158,7 +161,10 @@
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3CloneObjectEvent.h">
       <Filter>Source Files\common\C3_DEMO</Filter>
     </ClInclude>
-    <ClInclude Include="c3Flock.h">
+    <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\Vector3.h">
+      <Filter>Source Files\common\C3_DEMO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3Flock.h">
       <Filter>Source Files\common\C3_DEMO</Filter>
     </ClInclude>
   </ItemGroup>
