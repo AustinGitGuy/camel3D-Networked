@@ -24,15 +24,7 @@
 
 
 enum GameMessages {
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_GAME_MESSAGE_PRIVATE, ID_GAME_MOVE, ID_INVITE, ID_GAME_EVENT, DEFAULT_EVENT_ID
-};
-
-enum UserGameState {
-	PLAYER_ACTIVE, PLAYER_INACTIVE, SPECTATOR, LOBBY
-};
-
-enum ActiveGame{
-	TIC_TAC_TOE, CHECKERS
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_SEND_NEW_BOID, ID_RECEIVE_BOID
 };
 
 enum EventType {
@@ -69,15 +61,23 @@ struct EventStruct {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-struct GameMove {
+struct NewBoidStruct {
 	unsigned char id;
 	char senderName[127];
 	char receiveName[127];
-	ActiveGame currentGame;
-	int xPos;
-	int yPos;
-	int newXPos;
-	int newYPos;
+	Vector3 color;
+	Vector3 position;
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct PositionBoidStruct {
+	unsigned char id;
+	char senderName[127];
+	char receiveName[127];
+	Vector3 color;
+	Vector3 position;
+	int boidID[127];
 };
 #pragma pack(pop)
 
@@ -85,7 +85,7 @@ struct GameMove {
 struct UserProfile {
 	RakNet::SystemAddress address;
 	char name[127];
-	UserGameState playState;
+	//UserGameState playState;
 	bool isHost;
 };
 #pragma pack(pop)

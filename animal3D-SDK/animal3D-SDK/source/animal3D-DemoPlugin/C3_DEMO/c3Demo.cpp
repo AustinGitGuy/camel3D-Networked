@@ -6,102 +6,7 @@
 
 #include <GL/glew.h>
 
-//Prints all connected cilents and their IP addresses
-void PrintClientList(const ProfileList* clientProfiles)
-{
-	printf("\n****CLIENT LIST****");
-	printf("\nUsername    IP Address");
-	printf("\n------------------------\n");
-	for (int i = 0; i < clientProfiles->iter; i++)
-	{
-		printf("%s      ", clientProfiles->profiles[i].name);
-		printf("%s\n", clientProfiles->profiles[i].address.ToString());
-	}
-}
 
-void PrintBoardToConsole(c3_DemoState* demoState)
-{
-	int i, j;
-	char temp[10][10];
-	if (demoState->isTTT)//if game is TTT
-	{
-		for (i = 0; i < GS_TICTACTOE_BOARD_HEIGHT; i++)//Rows
-		{
-			strcpy(temp[i], "");
-			for (j = 0; j < GS_TICTACTOE_BOARD_WIDTH; j++)//content of rows
-			{
-				gs_tictactoe_space_state ttt = gs_tictactoe_getSpaceState(demoState->tttGame, i, j);
-				if (ttt == gs_tictactoe_space_x)//If space is occupied by an x
-				{
-					strcat(temp[i], "|X");
-				}
-				else if(ttt == gs_tictactoe_space_o)//If space is occupied by an o
-				{
-					strcat(temp[i], "|O");
-				}
-				else if (ttt == gs_tictactoe_space_open)//If space is occupied by nothing
-				{
-					strcat(temp[i], "| ");
-				}
-				else {
-					strcat(temp[i], "|null");
-					demoState->chatLog[demoState->chatIter] = "ERROR! TicTacToe returned null";
-					demoState->chatIter++;
-				}
-			}
-			strcat(temp[i], "|");
-			demoState->chatLog[demoState->chatIter] = (std::string)temp[i];
-			demoState->chatIter++;
-		}
-	}
-	else//should write local coordinates for battlehsip to see where you've fired etc.****This might need to be addressed later ************
-	{
-		for (i = 0; i < GS_CHECKERS_BOARD_HEIGHT; i++)//Rows
-		{
-			strcpy(temp[i], "");
-			for (j = 0; j < GS_CHECKERS_BOARD_WIDTH; j++)//content of rows
-			{
-				gs_checkers_space_state check = gs_checkers_getSpaceState(demoState->checkersGame, i, j);
-				if (check == gs_checkers_space_white)//If space is occupied by an x
-				{
-					strcat(temp[i], "|w");
-				}
-				else if (check == gs_checkers_space_black)//If space is occupied by an o
-				{
-					strcat(temp[i], "|b");
-				}
-				else if (check == gs_checkers_space_open)//If space is occupied by nothing
-				{
-					strcat(temp[i], "| ");
-				}
-				else if(check == gs_checkers_space_invalid){
-					strcat(temp[i], "|-");
-				}
-			}
-
-			strcat(temp[i], "|");
-			demoState->chatLog[demoState->chatIter] = (std::string)temp[i];
-			demoState->chatIter++;
-		}
-	}
-}
-
-//Below Fucntion is used to display all available commands for tic-tac-toe
-void DisplayCommandsChat()
-{
-	printf("\nAvailable Commands\n------------------\n");
-	printf("/help : Displays available commands\n"
-		"/whisper : Send a private message to the defined user (/whisper Username Message)\n"
-		"/clients : Displays list of currently connected clients (Host Only)\n"
-		"/ place{ x } {y} : Place a tic - tac - toe piece at x, y\n"
-		"/quit : Return to chatroom selection.\n"
-		"Type your message and press enter to send a public message\n");
-}
-
-void DisplayAllCommands() 
-{
-	DisplayCommandsChat();
-}
 
 void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, MsgStruct msg, int client = -1){
 	if (client == -1) {
@@ -179,16 +84,8 @@ void c3demoInput(c3_DemoState* demoState){
 		//Otherwise check command
 		else {
 
-			if (input[1] == 'h' || input[1] == 'H')//Displays list of commands
-			{
-				if(input[6] == 'a' || input[6] == 'A'){
-					DisplayAllCommands();
-				}
-				else{
-					DisplayCommandsChat();
-				}
-			}
-			else if (input[1] == 'w' || input[1] == 'W')//Private message
+			
+			if (input[1] == 'w' || input[1] == 'W')//Private message
 			{
 				char* trash;
 
@@ -217,17 +114,6 @@ void c3demoInput(c3_DemoState* demoState){
 				demoState->peer->Send((char*)& send, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
 
 			}
-			else if (input[1] == 'c' || input[1] == 'C')//Displays list of connected clients
-			{
-				if (demoState->isServer)//If server run command
-				{
-					PrintClientList(&demoState->clientProfiles);
-				}
-				else//If not server deny access
-				{
-					printf("Access to command denied.\n");
-				}
-			}
 			else if (input[1] == 'q' || input[1] == 'Q')//Leaves current chat room and brings user back to the Lobby
 			{
 				MsgStruct send;
@@ -241,7 +127,7 @@ void c3demoInput(c3_DemoState* demoState){
 			else//If no command is recognized display message and display list of commands
 			{
 				printf("Invalid Command. Please use one of the below commands.\n");
-				DisplayAllCommands();
+				
 			}
 		}
 	}
