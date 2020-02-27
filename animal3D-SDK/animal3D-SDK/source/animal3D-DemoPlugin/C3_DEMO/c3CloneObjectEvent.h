@@ -24,7 +24,6 @@ CloneObjectEvent::~CloneObjectEvent()
 {
 }
 
-//Sends event into queue????  or Activate Event's functionality?????
 void CloneObjectEvent::dispatch(c3_DemoState* demoState, EventTypeStruct* event)
 {
 	demoState->numCubes++;

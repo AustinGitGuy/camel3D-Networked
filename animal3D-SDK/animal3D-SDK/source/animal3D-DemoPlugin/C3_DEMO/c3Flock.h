@@ -4,14 +4,8 @@
 #include <vector>
 #include "Vector3.h"
 
-struct Boid
-{
-	float xPos,yPos;
-	float angle;
-	Vector3 color;
-
-};
-
+const int FLOCK_SIZE = 20;
+const float MAX_SPEED = 3;
 
 class Flock
 {
@@ -23,21 +17,20 @@ public:
 	//Will iterate through vector of boids in order to update their positions
 	void UpdateFlock();
 
+	void DrawFlock(int width, int height);
+
 	//Adds bird to Flocklist
-	void addBird(Vector3 position, float startAngle);
+	void addBird(Vector3 position);
 
-	void SeperateBoids();
-	void AlignBoids();
-	void GroupBoids();
-
-	float calcBoidDist(const Boid* firstBoid, const Boid* secondBoid);
-
+	Vector3 Seperation(int boidNum);
+	Vector3 Cohesion(int boidNum);
+	Vector3 Alignment(int boidNum);
 
 private:
+	Vector3 colors[FLOCK_SIZE];
+	Vector3 positions[FLOCK_SIZE];
+	Vector3 velocities[FLOCK_SIZE];
+	Vector3 accels[FLOCK_SIZE];
 
-	std::vector<Boid> mFlock;
-
-
-
-
+	int positionIndex = 0;
 };

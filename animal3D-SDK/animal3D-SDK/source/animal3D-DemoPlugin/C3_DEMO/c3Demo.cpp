@@ -6,8 +6,6 @@
 
 #include <GL/glew.h>
 
-
-
 void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, MsgStruct msg, int client = -1){
 	if (client == -1) {
 		for (int i = 0; i < clientProfiles->iter; i++) {
@@ -17,18 +15,6 @@ void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfi
 	}
 	else {
 		peer->Send((char*)&msg, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, clientProfiles->profiles[client].address, false);
-	}
-}
-
-void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfiles, GameMove msg, int client = -1){
-	if (client == -1) {
-		for (int i = 0; i < clientProfiles->iter; i++) {
-			peer->Send((char*)&msg, sizeof(GameMove), HIGH_PRIORITY, RELIABLE_ORDERED, 0, clientProfiles->profiles[i].address, false);
-
-		}
-	}
-	else {
-		peer->Send((char*)&msg, sizeof(GameMove), HIGH_PRIORITY, RELIABLE_ORDERED, 0, clientProfiles->profiles[client].address, false);
 	}
 }
 
@@ -105,7 +91,7 @@ void c3demoInput(c3_DemoState* demoState){
 				strcpy(tmp, " (Whisper): ");//Appends a notification that Message is private
 
 
-				send.id = (RakNet::MessageID)ID_GAME_MESSAGE_PRIVATE;
+				//send.id = (RakNet::MessageID)ID_GAME_MESSAGE_PRIVATE;
 				strcpy(send.receiveName, trash);//Setting who is receiving the message
 
 				trash = strtok(NULL, " ");
@@ -227,14 +213,6 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			strcpy(demoState->clientProfiles.profiles[demoState->clientProfiles.iter].name, read->msg);
 			demoState->clientProfiles.profiles[demoState->clientProfiles.iter].address = packet->systemAddress;
 
-			if(strcmp(read->msg, demoState->user) == 0){
-				MsgStruct send;
-				send.id = (RakNet::MessageID)ID_INVITE;
-				strcpy(send.msg, "ServerInvite");
-
-				SendToClient(demoState->peer, &demoState->clientProfiles, send, demoState->clientProfiles.iter);
-			}
-
 			demoState->chatLog[demoState->chatIter] = "Client connected with name " + (std::string)demoState->clientProfiles.profiles[demoState->clientProfiles.iter].name;
 			demoState->chatIter++;
 			demoState->clientProfiles.iter++;
@@ -284,44 +262,37 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			
 			break;
 		}
-		case ID_GAME_MESSAGE_PRIVATE: {
-			//Cast it back to a struct to be read
-			MsgStruct* read = (MsgStruct*)packet->data;
+		//case ID_GAME_MESSAGE_PRIVATE: {
+		//	//Cast it back to a struct to be read
+		//	MsgStruct* read = (MsgStruct*)packet->data;
 
-			int i;
-			for (i = 0; i < demoState->clientProfiles.iter; i++)
-			{
-				if (strcmp(read->receiveName, demoState->clientProfiles.profiles[i].name) == 0)//compares Name in str to list of names in clientProfiles
-				{
-					break;
-				}
+		//	int i;
+		//	for (i = 0; i < demoState->clientProfiles.iter; i++)
+		//	{
+		//		if (strcmp(read->receiveName, demoState->clientProfiles.profiles[i].name) == 0)//compares Name in str to list of names in clientProfiles
+		//		{
+		//			break;
+		//		}
 
-			}
+		//	}
 
-			if (i > demoState->clientProfiles.iter)
-			{
-				strcpy(read->msg, "Could not find user.\n");
+		//	if (i > demoState->clientProfiles.iter)
+		//	{
+		//		strcpy(read->msg, "Could not find user.\n");
 
-				demoState->peer->Send((char*)&read, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-				break;
-			}
-			else
-			{
-				demoState->chatLog[demoState->chatIter] = (std::string)read->senderName + " " + read->receiveName + " " + (std::string)read->msg;
-				demoState->chatIter++;
+		//		demoState->peer->Send((char*)&read, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+		//		break;
+		//	}
+		//	else
+		//	{
+		//		demoState->chatLog[demoState->chatIter] = (std::string)read->senderName + " " + read->receiveName + " " + (std::string)read->msg;
+		//		demoState->chatIter++;
 
-				//Message recieved
-				SendToClient(demoState->peer, &demoState->clientProfiles, *read, i);
-				break;
-			}
-		}
-		case ID_GAME_MOVE: {
-			
-			break;
-		}
-		case ID_INVITE:
-			
-			break;
+		//		//Message recieved
+		//		SendToClient(demoState->peer, &demoState->clientProfiles, *read, i);
+		//		break;
+		//	}
+		//}
 		default:
 			printf("Message with identifier %i has arrived.\n", packet->data[0]);
 			break;
@@ -331,7 +302,7 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 	
 }
 
-void c3demoRender(c3_DemoState const* demoState){
+void c3demoRender(c3_DemoState* demoState){
 
 	//Clear the screen
 
@@ -347,7 +318,7 @@ void c3demoRender(c3_DemoState const* demoState){
 		//	a3textDraw(demoState->text, -1, -.95 + (.05) * (val), -1, 1, 1, 1, 1, demoState->chatLog[i].c_str());
 		//}
 
-		for(int i = 0; i < demoState->numCubes; i++){
+		/*for(int i = 0; i < demoState->numCubes; i++){
 			if(i == 0){
 				glColor3f(demoState->red, demoState->blue, demoState->green);
 				glBegin(GL_QUADS);
@@ -367,7 +338,10 @@ void c3demoRender(c3_DemoState const* demoState){
 				glVertex2f(0 + demoState->xScale, 0 + demoState->yScale);
 				glEnd();
 			}
-		}
+		}*/
+
+		demoState->flock.UpdateFlock();
+		demoState->flock.DrawFlock(demoState->frameWidth, demoState->frameHeight);
 	}
 	else if(demoState->lobbyStage == 0){
 		a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "C to connect, H to host, Q to quit: %s", demoState->str);
@@ -478,114 +452,114 @@ void c3demoInputLab3(c3_DemoState* demoState, a3i32 asciiKey)
 	{
 		if(!demoState->inConsole)
 		{
-			EventStruct send;
-			
-			send.timeStamp = RakNet::GetTime();
+			//EventStruct send;
+			//
+			//send.timeStamp = RakNet::GetTime();
 
-			//Positional Movement
-			//Movement in Y axis
-			if (asciiKey == 119) //lowercase w
-			{
-				//Move object positive y
-				MoveObjectEvent* event = new MoveObjectEvent(0, 1, 0);
-				EventManager::GetInstance()->PushEvent(event);
+			////Positional Movement
+			////Movement in Y axis
+			//if (asciiKey == 119) //lowercase w
+			//{
+			//	//Move object positive y
+			//	MoveObjectEvent* event = new MoveObjectEvent(0, 1, 0);
+			//	EventManager::GetInstance()->PushEvent(event);
 
-			}
-			else if (asciiKey == 115) //lowercase s
-			{
-				//move object negative y
-				MoveObjectEvent* event = new MoveObjectEvent(0, -1, 0);
-				EventManager::GetInstance()->PushEvent(event);
-			}
-			//Movement in X axis
-			if (asciiKey == 97)// lowercase a
-			{
-				//move object negative x
-				MoveObjectEvent* event = new MoveObjectEvent(-1, 0, 0);
-				EventManager::GetInstance()->PushEvent(event);
-			}
-			else if (asciiKey == 100) //lowercase d
-			{
-				//move object positive x
-				MoveObjectEvent* event = new MoveObjectEvent(1, 0, 0);
-				EventManager::GetInstance()->PushEvent(event);
-			}
-			//Movement in Z axis
-			if (asciiKey == 113)// lowercase q
-			{
-				//move object positive z
-				MoveObjectEvent* event = new MoveObjectEvent(0, 0, 1);
-				EventManager::GetInstance()->PushEvent(event);
-			}
-			else if (asciiKey == 101) //lowercase e
-			{
-				//move object negative z
-				MoveObjectEvent* event = new MoveObjectEvent(0, 0, -1);
-				EventManager::GetInstance()->PushEvent(event);
-			}
+			//}
+			//else if (asciiKey == 115) //lowercase s
+			//{
+			//	//move object negative y
+			//	MoveObjectEvent* event = new MoveObjectEvent(0, -1, 0);
+			//	EventManager::GetInstance()->PushEvent(event);
+			//}
+			////Movement in X axis
+			//if (asciiKey == 97)// lowercase a
+			//{
+			//	//move object negative x
+			//	MoveObjectEvent* event = new MoveObjectEvent(-1, 0, 0);
+			//	EventManager::GetInstance()->PushEvent(event);
+			//}
+			//else if (asciiKey == 100) //lowercase d
+			//{
+			//	//move object positive x
+			//	MoveObjectEvent* event = new MoveObjectEvent(1, 0, 0);
+			//	EventManager::GetInstance()->PushEvent(event);
+			//}
+			////Movement in Z axis
+			//if (asciiKey == 113)// lowercase q
+			//{
+			//	//move object positive z
+			//	MoveObjectEvent* event = new MoveObjectEvent(0, 0, 1);
+			//	EventManager::GetInstance()->PushEvent(event);
+			//}
+			//else if (asciiKey == 101) //lowercase e
+			//{
+			//	//move object negative z
+			//	MoveObjectEvent* event = new MoveObjectEvent(0, 0, -1);
+			//	EventManager::GetInstance()->PushEvent(event);
+			//}
 
-			//Color Changes
-			if (asciiKey == 114)//lowercase r
-			{
-				ColorChangeEvent* event = new ColorChangeEvent(1, 0, 0);
-				EventManager::GetInstance()->PushEvent(event);
-			}
-			if (asciiKey == 103)//lowercase g
-			{
-				ColorChangeEvent* event = new ColorChangeEvent(0, 1, 0);
-				EventManager::GetInstance()->PushEvent(event);
-			}
-			if (asciiKey == 98)//lowercase b
-			{
-				ColorChangeEvent* event = new ColorChangeEvent(0, 0, 1);
-				EventManager::GetInstance()->PushEvent(event);
-			}
+			////Color Changes
+			//if (asciiKey == 114)//lowercase r
+			//{
+			//	ColorChangeEvent* event = new ColorChangeEvent(1, 0, 0);
+			//	EventManager::GetInstance()->PushEvent(event);
+			//}
+			//if (asciiKey == 103)//lowercase g
+			//{
+			//	ColorChangeEvent* event = new ColorChangeEvent(0, 1, 0);
+			//	EventManager::GetInstance()->PushEvent(event);
+			//}
+			//if (asciiKey == 98)//lowercase b
+			//{
+			//	ColorChangeEvent* event = new ColorChangeEvent(0, 0, 1);
+			//	EventManager::GetInstance()->PushEvent(event);
+			//}
 
-			//Stretch obj
-			if (asciiKey == 106)//lowercase j
-			{
-				//Stretch height
-				StretchObjectEvent* event = new StretchObjectEvent(0, .25f, 0);
-				EventManager::GetInstance()->PushEvent(event);
-			}
-			else if (asciiKey == 107)//lowercase k
-			{
-				//stretch width
-				StretchObjectEvent* event = new StretchObjectEvent(.25f, 0, 0);
-				EventManager::GetInstance()->PushEvent(event);
-			}
-			else if (asciiKey == 108)//lowercase l
-			{
-				//stretch depth
-				StretchObjectEvent* event = new StretchObjectEvent(0, 0, .25f);
-				EventManager::GetInstance()->PushEvent(event);
-			}
+			////Stretch obj
+			//if (asciiKey == 106)//lowercase j
+			//{
+			//	//Stretch height
+			//	StretchObjectEvent* event = new StretchObjectEvent(0, .25f, 0);
+			//	EventManager::GetInstance()->PushEvent(event);
+			//}
+			//else if (asciiKey == 107)//lowercase k
+			//{
+			//	//stretch width
+			//	StretchObjectEvent* event = new StretchObjectEvent(.25f, 0, 0);
+			//	EventManager::GetInstance()->PushEvent(event);
+			//}
+			//else if (asciiKey == 108)//lowercase l
+			//{
+			//	//stretch depth
+			//	StretchObjectEvent* event = new StretchObjectEvent(0, 0, .25f);
+			//	EventManager::GetInstance()->PushEvent(event);
+			//}
 
-			else if (asciiKey == 105)//lowercase i
-			{
-				//Stretch height
-				StretchObjectEvent* event = new StretchObjectEvent(0, -.25f, 0);
-				EventManager::GetInstance()->PushEvent(event);
-			}
-			else if (asciiKey == 111)//lowercase k
-			{
-				//stretch width
-				StretchObjectEvent* event = new StretchObjectEvent(-.25f, 0, 0);
-				EventManager::GetInstance()->PushEvent(event);
-			}
-			else if (asciiKey == 112)//lowercase p
-			{
-				//stretch depth
-				StretchObjectEvent* event = new StretchObjectEvent(0, 0, -.25f);
-				EventManager::GetInstance()->PushEvent(event);
-			}
+			//else if (asciiKey == 105)//lowercase i
+			//{
+			//	//Stretch height
+			//	StretchObjectEvent* event = new StretchObjectEvent(0, -.25f, 0);
+			//	EventManager::GetInstance()->PushEvent(event);
+			//}
+			//else if (asciiKey == 111)//lowercase k
+			//{
+			//	//stretch width
+			//	StretchObjectEvent* event = new StretchObjectEvent(-.25f, 0, 0);
+			//	EventManager::GetInstance()->PushEvent(event);
+			//}
+			//else if (asciiKey == 112)//lowercase p
+			//{
+			//	//stretch depth
+			//	StretchObjectEvent* event = new StretchObjectEvent(0, 0, -.25f);
+			//	EventManager::GetInstance()->PushEvent(event);
+			//}
 
 
-			else if (asciiKey == 122) //lowercase z
-			{
-				CloneObjectEvent* event = new CloneObjectEvent();
-				EventManager::GetInstance()->PushEvent(event);
-			}
+			//else if (asciiKey == 122) //lowercase z
+			//{
+			//	CloneObjectEvent* event = new CloneObjectEvent();
+			//	EventManager::GetInstance()->PushEvent(event);
+			//}
 		}
 	}
 	

@@ -24,7 +24,7 @@
 
 
 enum GameMessages {
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_SEND_NEW_BOID, ID_RECEIVE_BOID
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_SEND_NEW_BOID, ID_RECEIVE_BOID, DEFAULT_EVENT_ID
 };
 
 enum EventType {
@@ -189,15 +189,11 @@ const int MAX_CHARACTERS = 127;
 		float red, blue, green;
 		int numCubes = 0;
 
-
 		//Proj2
 		Flock flock;
-
-
-
 	};
 
-	void c3demoRender(c3_DemoState const* demoState);
+	void c3demoRender(c3_DemoState* demoState);
 
 	void c3demoUpdate(c3_DemoState const* demoState);
 
