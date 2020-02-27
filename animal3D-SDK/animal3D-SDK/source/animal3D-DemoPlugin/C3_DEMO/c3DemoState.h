@@ -28,7 +28,11 @@ enum GameMessages {
 };
 
 enum EventType {
-	NULL_TYPE, MOVE_EVENT, STRETCH_EVENT, COLORCHANGE_EVENT, CLONE_EVENT, NUM_EVENT_TYPES
+	NULL_TYPE, MOVE_EVENT, STRETCH_EVENT, COLORCHANGE_EVENT, CLONE_EVENT, SPAWN_EVENT, NUM_EVENT_TYPES
+};
+
+enum ServerType {
+	DATA_PUSH, DATA_SHARED, DATA_COUPLED
 };
 
 const unsigned int MAXCLIENTS = 10;
@@ -175,14 +179,6 @@ const int MAX_CHARACTERS = 127;
 
 		int chatIter = 0;
 
-		//-----------------------------------
-		//Game Stuff
-		gs_tictactoe tttGame;
-		gs_checkers checkersGame;
-
-		bool isTTT = false;
-		bool isPlayer1 = false;
-
 		//Lab3
 		float xPos = 0, yPos = 0;
 		float xScale = 0.25f, yScale = 0.25f;
@@ -191,6 +187,8 @@ const int MAX_CHARACTERS = 127;
 
 		//Proj2
 		Flock flock;
+
+		ServerType type;
 	};
 
 	void c3demoRender(c3_DemoState* demoState);

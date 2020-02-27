@@ -222,6 +222,7 @@
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3EventManager.h" />
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3Flock.h" />
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3MoveObjectEvent.h" />
+    <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3SpawnBoidEvent.h" />
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3StretchObjectEvent.h" />
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\Vector3.h" />
     <ClInclude Include="c3Event.h" />

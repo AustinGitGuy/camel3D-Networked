@@ -54,13 +54,19 @@ void EventManager::ProcessEvents(){
 
 	while(eventQueue.size() != 0){
 		Event* event = PopEvent();
-		if(event->type < NUM_EVENT_TYPES && event->type > -1 && !event->sent){
+		
+		//Check the local things here
+		if(event->type < NUM_EVENT_TYPES && event->type > -1 && !event->sent && !demoState->localSim){
 			send.events[iter].type = event->type;
 			event->dispatch(demoState, &send.events[iter]);
 			iter++;
 			delete event;
 		}
-		else if(event->type < NUM_EVENT_TYPES && event->type > -1){
+		else if(event->type < NUM_EVENT_TYPES && event->type > -1 && !demoState->localSim){
+			delete event;
+		}
+		else if (demoState->localSim){
+			event->dispatch(demoState, nullptr);
 			delete event;
 		}
 	}

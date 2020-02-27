@@ -3,6 +3,7 @@
 #include "c3ColorChangeEvent.h"
 #include "c3StretchObjectEvent.h"
 #include "c3CloneObjectEvent.h"
+#include "c3SpawnBoidEvent.h"
 
 #include <GL/glew.h>
 
@@ -341,10 +342,10 @@ void c3demoRender(c3_DemoState* demoState){
 		}*/
 
 		demoState->flock.UpdateFlock();
-		demoState->flock.DrawFlock(demoState->frameWidth, demoState->frameHeight);
+		if(!demoState->isServer) demoState->flock.DrawFlock(demoState->frameWidth, demoState->frameHeight);
 	}
 	else if(demoState->lobbyStage == 0){
-		a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "C to connect, H to host, Q to quit: %s", demoState->str);
+		a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "C to connect, H to host, Q to quit, L to locally simulate: %s", demoState->str);
 	}
 	else if(demoState->lobbyStage == 1){
 		a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: ");
@@ -352,6 +353,9 @@ void c3demoRender(c3_DemoState* demoState){
 	else if(demoState->lobbyStage == 2){
 		if(!demoState->isServer){
 			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: %s", demoState->str);
+		}
+		else {
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server mode, 1 for push, 2 for shared, 3 for coupled: %s", demoState->str);
 		}
 	}
 	else if(demoState->lobbyStage == 4){
@@ -385,16 +389,9 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 			return;
 		}
 		else if((demoState->str[0] == 'h') || (demoState->str[0] == 'H')){
-			// We need to let the server accept incoming connections from the clients
-			demoState->peer->SetMaximumIncomingConnections(MAXCLIENTS);
-
-			demoState->chatLog[demoState->chatIter] = "Starting the server";
-			demoState->chatIter++;
-			demoState->inGame = true;
-			demoState->lobbyStage = -1;
-			RakNet::SocketDescriptor sd(60000, 0);
-			demoState->peer->Startup(MAXCLIENTS, &sd, 1);
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server mode, 1 for push, 2 for shared, 3 for coupled: %s", demoState->str);
 			demoState->isServer = true;
+			demoState->lobbyStage++;
 		}
 		else {
 			demoState->chatLog[demoState->chatIter] = "Simulating locally";
@@ -407,6 +404,9 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 	else if(demoState->lobbyStage == 2){
 		if(!demoState->isServer){
 			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: %s", demoState->str);
+		}
+		else {
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server mode, 1 for push, 2 for shared, 3 for coupled: %s", demoState->str);
 		}
 		return;
 	}
@@ -421,6 +421,25 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 			}
 			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter your user name: ");
 			demoState->lobbyStage++;
+		}
+		else {
+			if(demoState->str[0] == '1'){
+				demoState->type = ServerType::DATA_PUSH;
+			}
+			if (demoState->str[0] == '2') {
+				demoState->type = ServerType::DATA_SHARED;
+			}
+			if (demoState->str[0] == '3') {
+				demoState->type = ServerType::DATA_COUPLED;
+			}
+			// We need to let the server accept incoming connections from the clients
+			demoState->peer->SetMaximumIncomingConnections(MAXCLIENTS);
+			demoState->chatLog[demoState->chatIter] = "Starting the server";
+			demoState->chatIter++;
+			demoState->inGame = true;
+			demoState->lobbyStage = -1;
+			RakNet::SocketDescriptor sd(60000, 0);
+			demoState->peer->Startup(MAXCLIENTS, &sd, 1);
 		}
 	}
 	else if(demoState->lobbyStage == 4){
@@ -452,114 +471,10 @@ void c3demoInputLab3(c3_DemoState* demoState, a3i32 asciiKey)
 	{
 		if(!demoState->inConsole)
 		{
-			//EventStruct send;
-			//
-			//send.timeStamp = RakNet::GetTime();
-
-			////Positional Movement
-			////Movement in Y axis
-			//if (asciiKey == 119) //lowercase w
-			//{
-			//	//Move object positive y
-			//	MoveObjectEvent* event = new MoveObjectEvent(0, 1, 0);
-			//	EventManager::GetInstance()->PushEvent(event);
-
-			//}
-			//else if (asciiKey == 115) //lowercase s
-			//{
-			//	//move object negative y
-			//	MoveObjectEvent* event = new MoveObjectEvent(0, -1, 0);
-			//	EventManager::GetInstance()->PushEvent(event);
-			//}
-			////Movement in X axis
-			//if (asciiKey == 97)// lowercase a
-			//{
-			//	//move object negative x
-			//	MoveObjectEvent* event = new MoveObjectEvent(-1, 0, 0);
-			//	EventManager::GetInstance()->PushEvent(event);
-			//}
-			//else if (asciiKey == 100) //lowercase d
-			//{
-			//	//move object positive x
-			//	MoveObjectEvent* event = new MoveObjectEvent(1, 0, 0);
-			//	EventManager::GetInstance()->PushEvent(event);
-			//}
-			////Movement in Z axis
-			//if (asciiKey == 113)// lowercase q
-			//{
-			//	//move object positive z
-			//	MoveObjectEvent* event = new MoveObjectEvent(0, 0, 1);
-			//	EventManager::GetInstance()->PushEvent(event);
-			//}
-			//else if (asciiKey == 101) //lowercase e
-			//{
-			//	//move object negative z
-			//	MoveObjectEvent* event = new MoveObjectEvent(0, 0, -1);
-			//	EventManager::GetInstance()->PushEvent(event);
-			//}
-
-			////Color Changes
-			//if (asciiKey == 114)//lowercase r
-			//{
-			//	ColorChangeEvent* event = new ColorChangeEvent(1, 0, 0);
-			//	EventManager::GetInstance()->PushEvent(event);
-			//}
-			//if (asciiKey == 103)//lowercase g
-			//{
-			//	ColorChangeEvent* event = new ColorChangeEvent(0, 1, 0);
-			//	EventManager::GetInstance()->PushEvent(event);
-			//}
-			//if (asciiKey == 98)//lowercase b
-			//{
-			//	ColorChangeEvent* event = new ColorChangeEvent(0, 0, 1);
-			//	EventManager::GetInstance()->PushEvent(event);
-			//}
-
-			////Stretch obj
-			//if (asciiKey == 106)//lowercase j
-			//{
-			//	//Stretch height
-			//	StretchObjectEvent* event = new StretchObjectEvent(0, .25f, 0);
-			//	EventManager::GetInstance()->PushEvent(event);
-			//}
-			//else if (asciiKey == 107)//lowercase k
-			//{
-			//	//stretch width
-			//	StretchObjectEvent* event = new StretchObjectEvent(.25f, 0, 0);
-			//	EventManager::GetInstance()->PushEvent(event);
-			//}
-			//else if (asciiKey == 108)//lowercase l
-			//{
-			//	//stretch depth
-			//	StretchObjectEvent* event = new StretchObjectEvent(0, 0, .25f);
-			//	EventManager::GetInstance()->PushEvent(event);
-			//}
-
-			//else if (asciiKey == 105)//lowercase i
-			//{
-			//	//Stretch height
-			//	StretchObjectEvent* event = new StretchObjectEvent(0, -.25f, 0);
-			//	EventManager::GetInstance()->PushEvent(event);
-			//}
-			//else if (asciiKey == 111)//lowercase k
-			//{
-			//	//stretch width
-			//	StretchObjectEvent* event = new StretchObjectEvent(-.25f, 0, 0);
-			//	EventManager::GetInstance()->PushEvent(event);
-			//}
-			//else if (asciiKey == 112)//lowercase p
-			//{
-			//	//stretch depth
-			//	StretchObjectEvent* event = new StretchObjectEvent(0, 0, -.25f);
-			//	EventManager::GetInstance()->PushEvent(event);
-			//}
-
-
-			//else if (asciiKey == 122) //lowercase z
-			//{
-			//	CloneObjectEvent* event = new CloneObjectEvent();
-			//	EventManager::GetInstance()->PushEvent(event);
-			//}
+			if(asciiKey == 101){
+				SpawnBoidEvent* event = new SpawnBoidEvent();
+				EventManager::GetInstance()->PushEvent(event);
+			}
 		}
 	}
 	

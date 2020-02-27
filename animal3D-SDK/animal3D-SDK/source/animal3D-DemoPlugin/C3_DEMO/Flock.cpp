@@ -46,7 +46,12 @@ void Flock::UpdateFlock()
 
 void Flock::DrawFlock(int width, int height){
 	for(int i = 0; i < positionIndex; i++){
-		glColor3f(1, 0, 0);
+		if(localBoid[i]){
+			glColor3f(1, 0, 0);
+		}
+		else {
+			glColor3f(0, 0, 1);
+		}
 		glBegin(GL_QUADS);
 		Vector3 pos;
 
@@ -76,12 +81,13 @@ void Flock::DrawFlock(int width, int height){
 	}
 }
 
-void Flock::addBird(Vector3 position)
+void Flock::addBird(Vector3 position, bool isLocal)
 {
 	//Add starting data to Bird
 	positions[positionIndex] = position;
 
 	//Put the color here
+	localBoid[positionIndex] = isLocal;
 
 	positionIndex++;
 }
@@ -93,7 +99,7 @@ Vector3 Flock::Seperation(int boidNum)
 	for(int i = 0; i < positionIndex; i++){
 		float distance;
 		distance = sqrt(((positions[i].x - positions[boidNum].x) * (positions[i].x - positions[boidNum].x)) + ((positions[i].y - positions[boidNum].y) * (positions[i].y - positions[boidNum].y)));
-		if(distance < 200){
+		if(distance < FLOCK_DISTANCE){
 			neighborNum++;
 			pos.x += positions[i].x;
 			pos.y += positions[i].y;
@@ -129,7 +135,7 @@ Vector3 Flock::Alignment(int boidNum){
 	for(int i = 0; i < positionIndex; i++){
 		float distance;
 		distance = sqrt(((positions[i].x - positions[boidNum].x) * (positions[i].x - positions[boidNum].x)) + ((positions[i].y - positions[boidNum].y) * (positions[i].y - positions[boidNum].y)));
-		if(distance < 200){
+		if(distance < FLOCK_DISTANCE){
 			neighborNum++;
 			vel.x += velocities[i].x;
 			vel.y += velocities[i].y;
@@ -158,7 +164,7 @@ Vector3 Flock::Cohesion(int boidNum)
 	for(int i = 0; i < positionIndex; i++){
 		float distance;
 		distance = sqrt(((positions[i].x - positions[boidNum].x) * (positions[i].x - positions[boidNum].x)) + ((positions[i].y - positions[boidNum].y) * (positions[i].y - positions[boidNum].y)));
-		if(distance < 200){
+		if(distance < FLOCK_DISTANCE){
 			neighborNum++;
 			pos.x += positions[i].x;
 			pos.y += positions[i].y;

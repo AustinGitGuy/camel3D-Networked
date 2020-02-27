@@ -167,6 +167,9 @@
     <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3Flock.h">
       <Filter>Source Files\common\C3_DEMO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3SpawnBoidEvent.h">
+      <Filter>Source Files\common\C3_DEMO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\resource\glsl\4x\fs\drawColorAttrib_fs4x.glsl">
