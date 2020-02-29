@@ -117,7 +117,7 @@
     <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\Vector3.cpp">
       <Filter>Source Files\common\C3_DEMO</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\Flock.cpp">
+    <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3Flock.cpp">
       <Filter>Source Files\common\C3_DEMO</Filter>
     </ClCompile>
   </ItemGroup>

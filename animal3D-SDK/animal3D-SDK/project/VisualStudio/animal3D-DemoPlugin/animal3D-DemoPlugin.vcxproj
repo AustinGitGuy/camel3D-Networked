@@ -205,7 +205,7 @@
     <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\A3_DEMO\_utilities\a3_DemoSceneObject.c" />
     <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3Demo.cpp" />
     <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3EventManager.cpp" />
-    <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\Flock.cpp" />
+    <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\c3Flock.cpp" />
     <ClCompile Include="..\..\..\source\animal3D-DemoPlugin\C3_DEMO\Vector3.cpp" />
     <ClCompile Include="_src_win\main_dll.c" />
   </ItemGroup>

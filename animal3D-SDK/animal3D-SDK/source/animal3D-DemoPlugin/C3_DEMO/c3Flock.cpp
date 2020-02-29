@@ -92,6 +92,26 @@ void Flock::addBird(Vector3 position, bool isLocal)
 	positionIndex++;
 }
 
+Vector3 Flock::getBoidPosition(int index)
+{
+	return positions[index];
+}
+
+Vector3 Flock::getBoidVelocity(int index)
+{
+	return velocities[index];
+}
+
+Vector3 Flock::getBoidAcceleration(int index)
+{
+	return accels[index];
+}
+
+bool Flock::checkLocalBoid(int index)
+{
+	return localBoid[index];
+}
+
 Vector3 Flock::Seperation(int boidNum)
 {
 	Vector3 pos = VECTOR3_ZERO;

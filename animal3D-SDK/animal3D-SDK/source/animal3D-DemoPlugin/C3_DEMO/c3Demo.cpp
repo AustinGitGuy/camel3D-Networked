@@ -1,8 +1,4 @@
 #include "C3_DEMO/c3DemoState.h"
-#include "c3MoveObjectEvent.h"
-#include "c3ColorChangeEvent.h"
-#include "c3StretchObjectEvent.h"
-#include "c3CloneObjectEvent.h"
 #include "c3SpawnBoidEvent.h"
 
 #include <GL/glew.h>
@@ -230,6 +226,15 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			demoState->clientProfiles.iter--;
 			break;
 		}
+
+
+
+
+
+
+
+
+		/*
 		case DEFAULT_EVENT_ID: {
 			EventStruct* read = (EventStruct*)packet->data;
 
@@ -263,6 +268,7 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			
 			break;
 		}
+		*/
 		//case ID_GAME_MESSAGE_PRIVATE: {
 		//	//Cast it back to a struct to be read
 		//	MsgStruct* read = (MsgStruct*)packet->data;
@@ -478,4 +484,25 @@ void c3demoInputLab3(c3_DemoState* demoState, a3i32 asciiKey)
 		}
 	}
 	
+}
+
+//Inital transfer of all boids to other client
+void c3ShareBoids(c3_DemoState* demoState) 
+{
+	NewBoidStruct send;
+
+	Flock demoFlock = demoState->flock;
+
+
+	for (int i = 0; i < FLOCK_SIZE; i++)
+	{
+		demoFlock.
+
+
+
+		demoState->peer->Send((char*)&send, sizeof(NewBoidStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+	}
+
+
+
 }

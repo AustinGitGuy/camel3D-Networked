@@ -23,6 +23,13 @@ public:
 	//Adds bird to Flocklist
 	void addBird(Vector3 position, bool isLocal = true);
 
+	//Access functions for boids
+	Vector3 getBoidPosition(int index);
+	Vector3 getBoidVelocity(int index);
+	Vector3 getBoidAcceleration(int index);
+	bool checkLocalBoid(int index);
+	
+
 	Vector3 Seperation(int boidNum);
 	Vector3 Cohesion(int boidNum);
 	Vector3 Alignment(int boidNum);
