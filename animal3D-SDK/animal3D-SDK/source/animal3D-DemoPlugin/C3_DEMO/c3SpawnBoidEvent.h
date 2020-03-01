@@ -26,7 +26,7 @@ SpawnBoidEvent::~SpawnBoidEvent()
 
 void SpawnBoidEvent::dispatch(c3_DemoState* demoState, EventTypeStruct* event)
 {
-	demoState->flock.addBird(Vector3(demoState->frameWidth, demoState->frameHeight));
+	if(demoState->serverType != DATA_PUSH) demoState->flock.addBird(Vector3(demoState->frameWidth, demoState->frameHeight));
 }
 
 #endif
