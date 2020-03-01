@@ -27,12 +27,12 @@ void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfi
 void c3demoUpdate(c3_DemoState* demoState){
 	//Game loop goes here
 	if(demoState->isServer){
-		c3SendBoidToClient(demoState);
 		demoState->flock.UpdateFlock(demoState->frameWidth, demoState->frameHeight);
+		c3SendBoidToClient(demoState);
 	}
 	else if(demoState->serverType != DATA_PUSH){
-		c3SendBoidToServer(demoState);
 		demoState->flock.UpdateFlock(demoState->frameWidth, demoState->frameHeight);
+		c3SendBoidToServer(demoState);
 	}
 }
 
@@ -246,10 +246,10 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			if(demoState->serverType != DATA_PUSH){
 				//Create the local flock
 				for(int i = 0; i < 10; i++){
-					demoState->flock.addBird(Vector3(20 + i * 50, 100));
+					demoState->flock.addBird(Vector3(20 + i * 50, 100), true);
 				}
 				for(int i = 0; i < 5; i++){
-					demoState->flock.addBird(Vector3(20 + i * 50, 200));
+					demoState->flock.addBird(Vector3(20 + i * 50, 200), true);
 				}
 			}
 			break;
@@ -384,10 +384,10 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 			}
 			//Create the local flock
 			for(int i = 0; i < 10; i++){
-				demoState->flock.addBird(Vector3(20 + i * 50, 100));
+				demoState->flock.addBird(Vector3(20 + i * 50, 100), true, i + 15);
 			}
 			for(int i = 0; i < 5; i++){
-				demoState->flock.addBird(Vector3(20 + i * 50, 200));
+				demoState->flock.addBird(Vector3(20 + i * 50, 200), true, i + 25);
 			}
 
 			// We need to let the server accept incoming connections from the clients

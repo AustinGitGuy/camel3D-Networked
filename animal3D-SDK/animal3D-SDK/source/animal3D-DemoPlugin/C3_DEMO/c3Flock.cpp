@@ -84,13 +84,22 @@ void Flock::DrawFlock(int width, int height){
 	}
 }
 
-void Flock::addBird(Vector3 position, bool isLocal)
+void Flock::addBird(Vector3 position, bool isLocal, int index)
 {
-	//Add starting data to Bird
-	positions[positionIndex] = position;
+	if(index == -1){
+		//Add starting data to Bird
+		positions[positionIndex] = position;
 
-	//Put the color here
-	localBoid[positionIndex] = isLocal;
+		localBoid[positionIndex] = isLocal;
+	}
+	else {
+		positions[index] = position;
+		localBoid[index] = isLocal;
+
+		if(positionIndex < index){
+			positionIndex = index;
+		}
+	}
 
 	positionIndex++;
 }

@@ -21,7 +21,7 @@ public:
 	void DrawFlock(int width, int height);
 
 	//Adds bird to Flocklist
-	void addBird(Vector3 position, bool isLocal = true);
+	void addBird(Vector3 position, bool isLocal = true, int index = -1);
 
 	//Access functions for boids
 	Vector3 getBoidPosition(int index);
