@@ -230,7 +230,7 @@ a3ret a3rendererCreateDefaultContext(a3_RenderingContext *context_out, a3_Window
 			a3i32 flag;
 		} a3_RenderingPlatformWGL;
 
-		// dummy context for checking pixel type and actual context to use
+		// dummy context for checking pixel serverType and actual context to use
 		a3_RenderingPlatformWGL falseContext = { 0 }, trueContext = { 0 };
 		a3i32 result = 0;
 

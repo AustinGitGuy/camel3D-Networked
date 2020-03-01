@@ -10,50 +10,39 @@ Flock::~Flock()
 {
 }
 
-void Flock::UpdateFlock()
+void Flock::UpdateFlock(int width, int height)
 {
 	for(int i = 0; i < positionIndex; i++){
-		accels[i] += Cohesion(i) * .05f + Seperation(i) * .1f + Alignment(i) * .1f;
-		velocities[i] += accels[i];
-
-		if(velocities[i].x > MAX_SPEED){
-			velocities[i].x = MAX_SPEED;
-		}
-
-		if(velocities[i].y > MAX_SPEED){
-			velocities[i].y = MAX_SPEED;
-		}
-
-		if(velocities[i].z > MAX_SPEED){
-			velocities[i].z = MAX_SPEED;
-		}
-
-		if(velocities[i].x < -MAX_SPEED){
-			velocities[i].x = -MAX_SPEED;
-		}
-
-		if(velocities[i].y < -MAX_SPEED){
-			velocities[i].y = -MAX_SPEED;
-		}
-
-		if(velocities[i].z < -MAX_SPEED){
-			velocities[i].z = -MAX_SPEED;
-		}
-
-		positions[i] += velocities[i];
-	}
-}
-
-void Flock::DrawFlock(int width, int height){
-	for(int i = 0; i < positionIndex; i++){
 		if(localBoid[i]){
-			glColor3f(1, 0, 0);
+			accels[i] += Cohesion(i) * .1f + Seperation(i) * .05f + Alignment(i) * .1f;
+			velocities[i] += accels[i];
+
+			if(velocities[i].x > MAX_SPEED){
+				velocities[i].x = MAX_SPEED;
+			}
+
+			if(velocities[i].y > MAX_SPEED){
+				velocities[i].y = MAX_SPEED;
+			}
+
+			if(velocities[i].z > MAX_SPEED){
+				velocities[i].z = MAX_SPEED;
+			}
+
+			if(velocities[i].x < -MAX_SPEED){
+				velocities[i].x = -MAX_SPEED;
+			}
+
+			if(velocities[i].y < -MAX_SPEED){
+				velocities[i].y = -MAX_SPEED;
+			}
+
+			if(velocities[i].z < -MAX_SPEED){
+				velocities[i].z = -MAX_SPEED;
+			}
+
+			positions[i] += velocities[i];
 		}
-		else {
-			glColor3f(0, 0, 1);
-		}
-		glBegin(GL_QUADS);
-		Vector3 pos;
 
 		if(positions[i].x < 0){
 			positions[i].x = width + positions[i].x;
@@ -68,6 +57,20 @@ void Flock::DrawFlock(int width, int height){
 		else if(positions[i].y > height){
 			positions[i].y = positions[i].y - height;
 		}
+	}
+}
+
+void Flock::DrawFlock(int width, int height){
+	for(int i = 0; i < positionIndex; i++){
+		if(localBoid[i]){
+			glColor3f(1, 0, 0);
+		}
+		else {
+			glColor3f(0, 0, 1);
+		}
+
+		glBegin(GL_QUADS);
+		Vector3 pos;
 
 		pos.x = (positions[i].x - width / 2) / (width / 2);
 

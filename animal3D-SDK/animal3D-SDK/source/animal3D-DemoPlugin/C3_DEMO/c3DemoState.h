@@ -24,15 +24,15 @@
 
 
 enum GameMessages {
-	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_SEND_NEW_BOID, ID_RECEIVE_BOID, DEFAULT_EVENT_ID
+	ID_GAME_MESSAGE_1 = ID_USER_PACKET_ENUM + 1, ID_NAME_JOIN, ID_NAME_LEAVE, ID_SEND_BOID, ID_RECEIVE_BOID, ID_SEND_SERVERTYPE, DEFAULT_EVENT_ID
 };
 
 enum EventType {
-	NULL_TYPE, MOVE_EVENT, STRETCH_EVENT, COLORCHANGE_EVENT, CLONE_EVENT, SPAWN_EVENT, NUM_EVENT_TYPES
+	NULL_EVENT, MOVE_EVENT, STRETCH_EVENT, COLORCHANGE_EVENT, CLONE_EVENT, SPAWN_EVENT, NUM_EVENT_TYPES
 };
 
 enum ServerType {
-	DATA_PUSH, DATA_SHARED, DATA_COUPLED
+	NULL_SERVER, DATA_PUSH, DATA_SHARED, DATA_COUPLED
 };
 
 const unsigned int MAXCLIENTS = 10;
@@ -41,7 +41,7 @@ const int EVENT_SIZE = 10;
 
 #pragma pack(push, 1)
 struct EventTypeStruct {
-	EventType type = NULL_TYPE;
+	EventType type = NULL_EVENT;
 	float float1, float2, float3;
 };
 #pragma pack(pop)
@@ -49,10 +49,16 @@ struct EventTypeStruct {
 #pragma pack(push, 1)
 struct MsgStruct {
 	unsigned char id;
-
 	char senderName[127];
 	char receiveName[127];
 	char msg[127];
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct ServerTypeStruct {
+	unsigned char id;
+	ServerType type = NULL_SERVER;
 };
 #pragma pack(pop)
 
@@ -65,23 +71,10 @@ struct EventStruct {
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-struct NewBoidStruct {
+struct BoidStruct {
 	unsigned char id;
-	char senderName[127];
-	char receiveName[127];
-	Vector3 color;
 	Vector3 position;
-};
-#pragma pack(pop)
-
-#pragma pack(push, 1)
-struct PositionBoidStruct {
-	unsigned char id;
-	char senderName[127];
-	char receiveName[127];
-	Vector3 color;
-	Vector3 position;
-	int boidID[127];
+	int boidId;
 };
 #pragma pack(pop)
 
@@ -188,12 +181,12 @@ const int MAX_CHARACTERS = 127;
 		//Proj2
 		Flock flock;
 
-		ServerType type;
+		ServerType serverType;
 	};
 
 	void c3demoRender(c3_DemoState* demoState);
 
-	void c3demoUpdate(c3_DemoState const* demoState);
+	void c3demoUpdate(c3_DemoState* demoState);
 
 	void c3demoInput(c3_DemoState* demoState);
 
@@ -204,6 +197,10 @@ const int MAX_CHARACTERS = 127;
 	void c3demoNetworkingLobby(c3_DemoState* demoState);
 
 	void c3demoInputLab3(c3_DemoState* demoState, a3i32 asciiKey);
+
+	void c3SendBoidToClient(c3_DemoState* demoState);
+
+	void c3SendBoidToServer(c3_DemoState* demoState);
 
 #ifdef __cplusplus
 }

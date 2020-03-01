@@ -26,7 +26,7 @@ SpawnBoidEvent::~SpawnBoidEvent()
 
 void SpawnBoidEvent::dispatch(c3_DemoState* demoState, EventTypeStruct* event)
 {
-	if(demoState->localSim) demoState->flock.addBird(Vector3(demoState->frameWidth, demoState->frameHeight));
+	demoState->flock.addBird(Vector3(demoState->frameWidth, demoState->frameHeight));
 }
 
 #endif

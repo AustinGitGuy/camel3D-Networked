@@ -24,9 +24,16 @@ void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfi
 	}
 }
 
-void c3demoUpdate(c3_DemoState const* demoState){
+void c3demoUpdate(c3_DemoState* demoState){
 	//Game loop goes here
-
+	if(demoState->isServer){
+		c3SendBoidToClient(demoState);
+		demoState->flock.UpdateFlock(demoState->frameWidth, demoState->frameHeight);
+	}
+	else if(demoState->serverType != DATA_PUSH){
+		c3SendBoidToServer(demoState);
+		demoState->flock.UpdateFlock(demoState->frameWidth, demoState->frameHeight);
+	}
 }
 
 void c3demoInput(c3_DemoState* demoState){
@@ -210,6 +217,12 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			strcpy(demoState->clientProfiles.profiles[demoState->clientProfiles.iter].name, read->msg);
 			demoState->clientProfiles.profiles[demoState->clientProfiles.iter].address = packet->systemAddress;
 
+			ServerTypeStruct msg;
+			msg.id = ID_SEND_SERVERTYPE;
+			msg.type = demoState->serverType;
+
+			demoState->peer->Send((char*)&msg, sizeof(ServerTypeStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
+
 			demoState->chatLog[demoState->chatIter] = "Client connected with name " + (std::string)demoState->clientProfiles.profiles[demoState->clientProfiles.iter].name;
 			demoState->chatIter++;
 			demoState->clientProfiles.iter++;
@@ -227,79 +240,33 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			break;
 		}
 
-
-
-
-
-
-
-
-		/*
-		case DEFAULT_EVENT_ID: {
-			EventStruct* read = (EventStruct*)packet->data;
-
-			for (int i = 0; i < EVENT_SIZE; i++){
-				if (read->events[i].type == MOVE_EVENT){
-					MoveObjectEvent* event = new MoveObjectEvent(read->events[i].float1, read->events[i].float2, read->events[i].float3);
-					event->sent = false;
-					EventManager::GetInstance()->PushEvent(event);
+		case ID_SEND_SERVERTYPE: {
+			ServerTypeStruct* read = (ServerTypeStruct*)packet->data;
+			demoState->serverType = read->type;
+			if(demoState->serverType != DATA_PUSH){
+				//Create the local flock
+				for(int i = 0; i < 10; i++){
+					demoState->flock.addBird(Vector3(20 + i * 50, 100));
 				}
-				else if (read->events[i].type == COLORCHANGE_EVENT){
-					ColorChangeEvent* event = new ColorChangeEvent(read->events[i].float1, read->events[i].float2, read->events[i].float3);
-					event->sent = false;
-					EventManager::GetInstance()->PushEvent(event);
-				}
-				else if (read->events[i].type == STRETCH_EVENT){
-					StretchObjectEvent* event = new StretchObjectEvent(read->events[i].float1, read->events[i].float2, read->events[i].float3);
-					event->sent = false;
-					EventManager::GetInstance()->PushEvent(event);
-				}
-				else if (read->events[i].type == CLONE_EVENT){
-					CloneObjectEvent* event = new CloneObjectEvent();
-					event->sent = false;
-					EventManager::GetInstance()->PushEvent(event);
+				for(int i = 0; i < 5; i++){
+					demoState->flock.addBird(Vector3(20 + i * 50, 200));
 				}
 			}
-
-			if(demoState->isServer){
-				SendToClient(demoState->peer, &demoState->clientProfiles, *read, packet->systemAddress);
-			}
-
-			
 			break;
 		}
-		*/
-		//case ID_GAME_MESSAGE_PRIVATE: {
-		//	//Cast it back to a struct to be read
-		//	MsgStruct* read = (MsgStruct*)packet->data;
+		case ID_SEND_BOID: {
+			BoidStruct* read = (BoidStruct*)packet->data;
+			if(read->boidId >= demoState->flock.GetPositionIndex()){
+				demoState->flock.addBird(read->position, false);
+			}
+			else demoState->flock.setBoidPosition(read->boidId, read->position);
 
-		//	int i;
-		//	for (i = 0; i < demoState->clientProfiles.iter; i++)
-		//	{
-		//		if (strcmp(read->receiveName, demoState->clientProfiles.profiles[i].name) == 0)//compares Name in str to list of names in clientProfiles
-		//		{
-		//			break;
-		//		}
-
-		//	}
-
-		//	if (i > demoState->clientProfiles.iter)
-		//	{
-		//		strcpy(read->msg, "Could not find user.\n");
-
-		//		demoState->peer->Send((char*)&read, sizeof(MsgStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, false);
-		//		break;
-		//	}
-		//	else
-		//	{
-		//		demoState->chatLog[demoState->chatIter] = (std::string)read->senderName + " " + read->receiveName + " " + (std::string)read->msg;
-		//		demoState->chatIter++;
-
-		//		//Message recieved
-		//		SendToClient(demoState->peer, &demoState->clientProfiles, *read, i);
-		//		break;
-		//	}
-		//}
+			//Send it to the clients if we are the server
+			if(demoState->isServer){
+				demoState->peer->Send((char*)&send, sizeof(BoidStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, packet->systemAddress, true);
+			}
+			break;
+		}
 		default:
 			printf("Message with identifier %i has arrived.\n", packet->data[0]);
 			break;
@@ -316,38 +283,6 @@ void c3demoRender(c3_DemoState* demoState){
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	if(demoState->inGame){
-		////Draw the chatroom if we are in
-		//a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Chat: %s", demoState->str);
-
-		////Draw the chatlog
-		//for(int i = demoState->chatIter; i >= 0; i--){
-		//	int val = demoState->chatIter - i + 1;
-		//	a3textDraw(demoState->text, -1, -.95 + (.05) * (val), -1, 1, 1, 1, 1, demoState->chatLog[i].c_str());
-		//}
-
-		/*for(int i = 0; i < demoState->numCubes; i++){
-			if(i == 0){
-				glColor3f(demoState->red, demoState->blue, demoState->green);
-				glBegin(GL_QUADS);
-				glVertex2f(demoState->xPos - demoState->xScale, demoState->yPos + demoState->yScale);
-				glVertex2f(demoState->xPos - demoState->xScale, demoState->yPos - demoState->yScale);
-				glVertex2f(demoState->xPos + demoState->xScale, demoState->yPos - demoState->yScale);
-				glVertex2f(demoState->xPos + demoState->xScale, demoState->yPos + demoState->yScale);
-				glEnd();
-			}
-			
-			if(i > 0){
-				glColor3f(demoState->red, demoState->blue, demoState->green);
-				glBegin(GL_QUADS);
-				glVertex2f(0 - demoState->xScale, 0 + demoState->yScale);
-				glVertex2f(0 - demoState->xScale, 0 - demoState->yScale);
-				glVertex2f(0 + demoState->xScale, 0 - demoState->yScale);
-				glVertex2f(0 + demoState->xScale, 0 + demoState->yScale);
-				glEnd();
-			}
-		}*/
-
-		demoState->flock.UpdateFlock();
 		if(!demoState->isServer) demoState->flock.DrawFlock(demoState->frameWidth, demoState->frameHeight);
 	}
 	else if(demoState->lobbyStage == 0){
@@ -401,6 +336,15 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 		}
 		else {
 			demoState->chatLog[demoState->chatIter] = "Simulating locally";
+
+			//Create the local flock
+			for(int i = 0; i < 10; i++){
+				demoState->flock.addBird(Vector3(20 + i * 50, 100));
+			}
+			for(int i = 0; i < 5; i++){
+				demoState->flock.addBird(Vector3(20 + i * 50, 200));
+			}
+
 			demoState->chatIter++;
 			demoState->inGame = true;
 			demoState->lobbyStage = -1;
@@ -430,14 +374,22 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 		}
 		else {
 			if(demoState->str[0] == '1'){
-				demoState->type = ServerType::DATA_PUSH;
+				demoState->serverType = ServerType::DATA_PUSH;
 			}
 			if (demoState->str[0] == '2') {
-				demoState->type = ServerType::DATA_SHARED;
+				demoState->serverType = ServerType::DATA_SHARED;
 			}
 			if (demoState->str[0] == '3') {
-				demoState->type = ServerType::DATA_COUPLED;
+				demoState->serverType = ServerType::DATA_COUPLED;
 			}
+			//Create the local flock
+			for(int i = 0; i < 10; i++){
+				demoState->flock.addBird(Vector3(20 + i * 50, 100));
+			}
+			for(int i = 0; i < 5; i++){
+				demoState->flock.addBird(Vector3(20 + i * 50, 200));
+			}
+
 			// We need to let the server accept incoming connections from the clients
 			demoState->peer->SetMaximumIncomingConnections(MAXCLIENTS);
 			demoState->chatLog[demoState->chatIter] = "Starting the server";
@@ -472,7 +424,6 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 
 void c3demoInputLab3(c3_DemoState* demoState, a3i32 asciiKey)
 {
-
 	if(!demoState->isServer)
 	{
 		if(!demoState->inConsole)
@@ -486,23 +437,40 @@ void c3demoInputLab3(c3_DemoState* demoState, a3i32 asciiKey)
 	
 }
 
-//Inital transfer of all boids to other client
-void c3ShareBoids(c3_DemoState* demoState) 
+//Inital transfer of all boids to server
+void c3SendBoidToServer(c3_DemoState* demoState) 
 {
-	NewBoidStruct send;
+	BoidStruct send;
 
 	Flock demoFlock = demoState->flock;
+	send.id = ID_SEND_BOID;
 
-
-	for (int i = 0; i < FLOCK_SIZE; i++)
-	{
-		demoFlock.
-
-
-
-		demoState->peer->Send((char*)&send, sizeof(NewBoidStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+	//Send boids to the server
+	for(int i = 0; i < demoFlock.GetPositionIndex(); i++){
+		if(demoFlock.checkLocalBoid(i)){
+			send.position = demoFlock.getBoidPosition(i);
+			send.boidId = i;
+			demoState->peer->Send((char*)&send, sizeof(BoidStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+		}
 	}
+}
 
+//Inital transfer of all boids to other clients
+void c3SendBoidToClient(c3_DemoState* demoState)
+{
+	if(demoState->clientProfiles.iter <= 0) return;
+	BoidStruct send;
 
+	Flock demoFlock = demoState->flock;
+	send.id = ID_SEND_BOID;
 
+	//Send boids to the clients
+	for (int i = 0; i < demoFlock.GetPositionIndex(); i++){
+		if(demoFlock.checkLocalBoid(i)){
+			send.position = demoFlock.getBoidPosition(i);
+			send.boidId = i;
+
+			demoState->peer->Send((char*)&send, sizeof(BoidStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->clientProfiles.profiles[0].address, false);
+		}
+	}
 }

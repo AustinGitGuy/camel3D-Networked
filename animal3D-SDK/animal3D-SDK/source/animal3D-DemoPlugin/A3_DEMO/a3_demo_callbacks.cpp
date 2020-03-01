@@ -226,14 +226,6 @@ A3DYLIBSYMBOL c3_DemoState *a3demoCB_load(c3_DemoState *demoState, a3boolean hot
 
 		demoState->peer = RakNet::RakPeerInterface::GetInstance();
 
-		for(int i = 0; i < 10; i++){
-			demoState->flock.addBird(Vector3(20 + i * 50, 100));
-		}
-
-		for(int i = 0; i < 10; i++){
-			demoState->flock.addBird(Vector3(20 + i * 50, 200));
-		}
-
 		EventManager::Init();
 		EventManager::GetInstance()->LoadManager(demoState);
 

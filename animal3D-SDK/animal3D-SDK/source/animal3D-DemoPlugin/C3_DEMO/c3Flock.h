@@ -16,7 +16,7 @@ public:
 
 
 	//Will iterate through vector of boids in order to update their positions
-	void UpdateFlock();
+	void UpdateFlock(int width, int height);
 
 	void DrawFlock(int width, int height);
 
@@ -28,7 +28,10 @@ public:
 	Vector3 getBoidVelocity(int index);
 	Vector3 getBoidAcceleration(int index);
 	bool checkLocalBoid(int index);
+
+	void setBoidPosition(int index, Vector3 position){ positions[index] = position; }
 	
+	int GetPositionIndex(){ return positionIndex; }
 
 	Vector3 Seperation(int boidNum);
 	Vector3 Cohesion(int boidNum);
