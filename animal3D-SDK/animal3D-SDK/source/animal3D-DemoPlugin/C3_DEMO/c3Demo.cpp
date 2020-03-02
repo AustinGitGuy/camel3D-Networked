@@ -488,7 +488,11 @@ void c3SendBoidToClient(c3_DemoState* demoState)
 			send.position = demoFlock.getBoidPosition(i);
 			send.boidId = i;
 
-			demoState->peer->Send((char*)&send, sizeof(BoidStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->clientProfiles.profiles[0].address, false);
+			for (int j = 0; j < demoState->clientProfiles.iter; j++)
+			{
+				demoState->peer->Send((char*)& send, sizeof(BoidStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->clientProfiles.profiles[j].address, false);
+			}
+
 		}
 	}
 }
