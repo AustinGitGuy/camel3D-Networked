@@ -4,7 +4,7 @@
 #include <vector>
 #include "Vector3.h"
 
-const int FLOCK_SIZE = 30;
+const int FLOCK_SIZE = 45;
 const float MAX_SPEED = 3;
 const int FLOCK_DISTANCE = 125;
 

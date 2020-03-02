@@ -400,13 +400,26 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 			if (demoState->str[0] == '3') {
 				demoState->serverType = ServerType::DATA_COUPLED;
 			}
-			//Create the local flock
-			for(int i = 0; i < 10; i++){
-				demoState->flock.addBird(Vector3(20 + i * 50, 100), true, i + 15);
+
+			if(demoState->serverType != ServerType::DATA_PUSH){
+				//Create the local flock
+				for (int i = 0; i < 10; i++) {
+					demoState->flock.addBird(Vector3(20 + i * 50, 100), true, i + 15);
+				}
+				for (int i = 0; i < 5; i++) {
+					demoState->flock.addBird(Vector3(20 + i * 50, 200), true, i + 25);
+				}
 			}
-			for(int i = 0; i < 5; i++){
-				demoState->flock.addBird(Vector3(20 + i * 50, 200), true, i + 25);
+			else {
+				//Create the local flock
+				for (int i = 0; i < 10; i++) {
+					demoState->flock.addBird(Vector3(20 + i * 50, 100));
+				}
+				for (int i = 0; i < 5; i++) {
+					demoState->flock.addBird(Vector3(20 + i * 50, 200));
+				}
 			}
+			
 
 			// We need to let the server accept incoming connections from the clients
 			demoState->peer->SetMaximumIncomingConnections(MAXCLIENTS);
