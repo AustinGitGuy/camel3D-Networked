@@ -259,7 +259,25 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			if(read->boidId >= demoState->flock.GetPositionIndex()){
 				demoState->flock.addBird(read->position, false);
 			}
-			else demoState->flock.setBoidPosition(read->boidId, read->position);
+			else {
+
+				if (demoState->serverType == ServerType::DATA_COUPLED && demoState->isServer == false)
+				{
+					//If the local position is not the same as the server position then set the boid's position to the server position
+					if (demoState->flock.getBoidPosition(read->boidId) != read->position)
+					{
+						demoState->flock.setBoidPosition(read->boidId, read->position);
+					}
+					
+				}
+				else
+				{
+					demoState->flock.setBoidPosition(read->boidId, read->position);
+				}
+
+				
+
+			}
 
 			//Send it to the clients if we are the server
 			if(demoState->isServer){
