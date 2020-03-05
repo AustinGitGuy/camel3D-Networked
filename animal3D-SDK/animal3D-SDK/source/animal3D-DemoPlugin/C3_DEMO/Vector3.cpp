@@ -79,6 +79,35 @@ void CrossProduct(Vector3 one, Vector3 two, Vector3* product){
 	product->z = one.x * two.y - one.y * two.x; 
 }
 
+Vector3 ClampVector(Vector3 clampValue, float clampLimit)
+{
+	if (clampValue.x > clampLimit) {
+		clampValue.x = clampLimit;
+	}
+
+	if (clampValue.y > clampLimit) {
+		clampValue.y = clampLimit;
+	}
+
+	if (clampValue.z > clampLimit) {
+		clampValue.z = clampLimit;
+	}
+
+	if (clampValue.x < -clampLimit) {
+		clampValue.x = -clampLimit;
+	}
+
+	if (clampValue.y < -clampLimit) {
+		clampValue.y = -clampLimit;
+	}
+
+	if (clampValue.z < -clampLimit) {
+		clampValue.z = -clampLimit;
+	}
+
+	return clampValue;
+}
+
 Vector3 Lerp(Vector3 one, Vector3 two, float time){
 	Vector3 result(0, 0, 0);
 	result.x = (1 - time) * one.x + time * two.x;

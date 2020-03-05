@@ -4,8 +4,10 @@
 #include <vector>
 #include "Vector3.h"
 
+
 const int FLOCK_SIZE = 45;
-const float MAX_SPEED = 3;
+const float MAX_SPEED = 5;
+const float MAX_ACCEL = 3;
 const int FLOCK_DISTANCE = 125;
 
 class Flock
@@ -30,6 +32,8 @@ public:
 	bool checkLocalBoid(int index);
 
 	void setBoidPosition(int index, Vector3 position){ positions[index] = position; }
+	void setBoidVelocity(int index, Vector3 velocity) { velocities[index] = velocity; }
+	void setBoidAcceleration(int index, Vector3 acceleration) { accels[index] = acceleration; }
 	
 	int GetPositionIndex(){ return positionIndex; }
 
@@ -44,4 +48,7 @@ private:
 	bool localBoid[FLOCK_SIZE];
 
 	int positionIndex = 0;
+
+	float lastFrame;
+
 };

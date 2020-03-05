@@ -1,9 +1,13 @@
 #include "c3Flock.h"
 
 #include <GL/glew.h>
+#include <ctime>
+#include <time.h>
+
 
 Flock::Flock()
 {
+	lastFrame = (float)clock() / CLOCKS_PER_SEC;
 }
 
 Flock::~Flock()
@@ -12,38 +16,28 @@ Flock::~Flock()
 
 void Flock::UpdateFlock(int width, int height)
 {
+	float currentFrame, deltaTime;
+
+	currentFrame = (float)clock() / CLOCKS_PER_SEC;
+
+	deltaTime = currentFrame - lastFrame;
+
+	lastFrame = currentFrame;
+	
+	//Updating Velocities
 	for(int i = 0; i < positionIndex; i++){
-		if(localBoid[i]){
-			accels[i] += Cohesion(i) * .1f + Seperation(i) * .05f + Alignment(i) * .1f;
-			velocities[i] += accels[i];
-
-			if(velocities[i].x > MAX_SPEED){
-				velocities[i].x = MAX_SPEED;
-			}
-
-			if(velocities[i].y > MAX_SPEED){
-				velocities[i].y = MAX_SPEED;
-			}
-
-			if(velocities[i].z > MAX_SPEED){
-				velocities[i].z = MAX_SPEED;
-			}
-
-			if(velocities[i].x < -MAX_SPEED){
-				velocities[i].x = -MAX_SPEED;
-			}
-
-			if(velocities[i].y < -MAX_SPEED){
-				velocities[i].y = -MAX_SPEED;
-			}
-
-			if(velocities[i].z < -MAX_SPEED){
-				velocities[i].z = -MAX_SPEED;
-			}
-
-			positions[i] += velocities[i];
-		}
-
+		
+		accels[i] += Cohesion(i) * .1f + Seperation(i) * .05f + Alignment(i) * .1f;
+		velocities[i] = velocities[i] + accels[i] * deltaTime;
+			
+		//Velocity Checks
+		velocities[i] = ClampVector(velocities[i], MAX_SPEED);
+		accels[i] = ClampVector(accels[i], MAX_ACCEL);
+			
+		//Calc final position usign physics equation
+		positions[i] = positions[i] + velocities[i] * deltaTime +  accels[i] * (deltaTime * deltaTime) * 0.5;
+			
+		//Boids Wrap around screen
 		if(positions[i].x < 0){
 			positions[i].x = width + positions[i].x;
 		}

@@ -24,6 +24,54 @@ void SendToClient(RakNet::RakPeerInterface* peer, const ProfileList* clientProfi
 	}
 }
 
+//Inital transfer of all boids to server
+void c3SendBoidToServer(c3_DemoState* demoState)
+{
+	BoidStruct send;
+
+	Flock demoFlock = demoState->flock;
+	send.id = ID_SEND_BOID;
+
+	//Send boids to the server
+	for (int i = 0; i < demoFlock.GetPositionIndex(); i++) {
+		if (demoFlock.checkLocalBoid(i)) {
+			send.position = demoFlock.getBoidPosition(i);
+			send.boidId = i;
+			send.velocity = demoFlock.getBoidVelocity(i);
+			send.acceleration = demoFlock.getBoidAcceleration(i);
+			send.timeStamp = RakNet::GetTimeMS();
+			demoState->peer->Send((char*)& send, sizeof(BoidStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
+		}
+	}
+}
+
+//Server to Client
+void c3SendBoidToClient(c3_DemoState* demoState)
+{
+	if (demoState->clientProfiles.iter <= 0) return;
+	BoidStruct send;
+
+	Flock demoFlock = demoState->flock;
+	send.id = ID_SEND_BOID;
+
+	//Send boids to the clients
+	for (int i = 0; i < demoFlock.GetPositionIndex(); i++) {
+		if (demoFlock.checkLocalBoid(i)) {
+			send.position = demoFlock.getBoidPosition(i);
+			send.boidId = i;
+			send.velocity = demoFlock.getBoidVelocity(i);
+			send.acceleration = demoFlock.getBoidAcceleration(i);
+			send.timeStamp = RakNet::GetTimeMS();
+
+			for (int j = 0; j < demoState->clientProfiles.iter; j++)
+			{
+				demoState->peer->Send((char*)& send, sizeof(BoidStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->clientProfiles.profiles[j].address, false);
+			}
+
+		}
+	}
+}
+
 void c3demoUpdate(c3_DemoState* demoState){
 	//Game loop goes here
 	if(demoState->isServer){
@@ -258,25 +306,31 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 			BoidStruct* read = (BoidStruct*)packet->data;
 			if(read->boidId >= demoState->flock.GetPositionIndex()){
 				demoState->flock.addBird(read->position, false);
+				demoState->flock.setBoidAcceleration(read->boidId, read->acceleration);
+				demoState->flock.setBoidVelocity(read->boidId, read->velocity);
 			}
-			else {
-
-				if (demoState->serverType == ServerType::DATA_COUPLED && demoState->isServer == false)
+			else {		
+				//Check if Id belongs to non local boid
+				if (demoState->flock.checkLocalBoid(read->boidId) == false)
 				{
-					//If the local position is not the same as the server position then set the boid's position to the server position
+					demoState->flock.setBoidAcceleration(read->boidId, read->acceleration);
+					demoState->flock.setBoidVelocity(read->boidId, read->velocity);
+					
+					//Check to see if the recevied positoin is the same as the locally calced position
 					if (demoState->flock.getBoidPosition(read->boidId) != read->position)
 					{
 						demoState->flock.setBoidPosition(read->boidId, read->position);
+						//Calc latency
+						float latency = RakNet::GetTimeMS() - read->timeStamp;
+
+						printf("LAtency val: %f\n", latency);
+
+						//Lerp position
+						//demoState->flock.setBoidPosition(read->boidId, Lerp(demoState->flock.getBoidPosition(read->boidId), read->position, latency));
+
 					}
-					
 				}
-				else
-				{
-					demoState->flock.setBoidPosition(read->boidId, read->position);
-				}
-
 				
-
 			}
 
 			//Send it to the clients if we are the server
@@ -314,7 +368,7 @@ void c3demoRender(c3_DemoState* demoState){
 			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: %s", demoState->str);
 		}
 		else {
-			//a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server mode, 1 for push, 2 for shared, 3 for coupled: %s", demoState->str);
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server mode, 1 for push, 2 for shared, 3 for coupled: %s", demoState->str);
 		}
 	}
 	else if(demoState->lobbyStage == 4){
@@ -356,9 +410,41 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 			return;
 		}
 		else if((demoState->str[0] == 'h') || (demoState->str[0] == 'H')){
-			//a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server mode, 1 for push, 2 for shared, 3 for coupled: %s", demoState->str);
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server mode, 1 for push, 2 for shared, 3 for coupled: %s", demoState->str);
 			demoState->isServer = true;
-			demoState->lobbyStage++;
+			demoState->lobbyStage = -1;
+
+			demoState->serverType = ServerType::DATA_COUPLED;
+
+			if (demoState->serverType != ServerType::DATA_PUSH) {
+				//Create the local flock
+				for (int i = 0; i < 10; i++) {
+					demoState->flock.addBird(Vector3(20 + i * 50, 100), true, i + 15);
+				}
+				for (int i = 0; i < 5; i++) {
+					demoState->flock.addBird(Vector3(20 + i * 50, 200), true, i + 25);
+				}
+			}
+			else {
+				//Create the local flock
+				for (int i = 0; i < 10; i++) {
+					demoState->flock.addBird(Vector3(20 + i * 50, 100));
+				}
+				for (int i = 0; i < 5; i++) {
+					demoState->flock.addBird(Vector3(20 + i * 50, 200));
+				}
+			}
+
+
+			// We need to let the server accept incoming connections from the clients
+			demoState->peer->SetMaximumIncomingConnections(MAXCLIENTS);
+			demoState->chatLog[demoState->chatIter] = "Starting the server";
+			demoState->chatIter++;
+			demoState->inGame = true;
+			demoState->lobbyStage = -1;
+			RakNet::SocketDescriptor sd(60000, 0);
+			demoState->peer->Startup(MAXCLIENTS, &sd, 1);
+
 		}
 		else {
 			demoState->chatLog[demoState->chatIter] = "Simulating locally";
@@ -382,9 +468,9 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 		if(!demoState->isServer){
 			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: %s", demoState->str);
 		}
-		//else {
-		//	a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server mode, 1 for push, 2 for shared, 3 for coupled: %s", demoState->str);
-		//}
+		else {
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server mode, 1 for push, 2 for shared, 3 for coupled: %s", demoState->str);
+		}
 		return;
 	}
 	else if(demoState->lobbyStage == 3){
@@ -400,45 +486,12 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter your user name: ");
 			demoState->lobbyStage++;
 		}
-		else {
-			
-			demoState->serverType = ServerType::DATA_COUPLED;
-			
-
-			if(demoState->serverType != ServerType::DATA_PUSH){
-				//Create the local flock
-				for (int i = 0; i < 10; i++) {
-					demoState->flock.addBird(Vector3(20 + i * 50, 100), true, i + 15);
-				}
-				for (int i = 0; i < 5; i++) {
-					demoState->flock.addBird(Vector3(20 + i * 50, 200), true, i + 25);
-				}
-			}
-			else {
-				//Create the local flock
-				for (int i = 0; i < 10; i++) {
-					demoState->flock.addBird(Vector3(20 + i * 50, 100));
-				}
-				for (int i = 0; i < 5; i++) {
-					demoState->flock.addBird(Vector3(20 + i * 50, 200));
-				}
-			}
-			
-
-			// We need to let the server accept incoming connections from the clients
-			demoState->peer->SetMaximumIncomingConnections(MAXCLIENTS);
-			demoState->chatLog[demoState->chatIter] = "Starting the server";
-			demoState->chatIter++;
-			demoState->inGame = true;
-			demoState->lobbyStage = -1;
-			RakNet::SocketDescriptor sd(60000, 0);
-			demoState->peer->Startup(MAXCLIENTS, &sd, 1);
-		}
+		
 	}
 	else if(demoState->lobbyStage == 4){
 		printf("Stage 4\n");
 		if(!demoState->isServer){
-			//a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter your user name: %s", demoState->str);
+			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter your user name: %s", demoState->str);
 		}
 		return;
 	}
@@ -474,44 +527,6 @@ void c3demoInputLab3(c3_DemoState* demoState, a3i32 asciiKey)
 	
 }
 
-//Inital transfer of all boids to server
-void c3SendBoidToServer(c3_DemoState* demoState) 
-{
-	BoidStruct send;
 
-	Flock demoFlock = demoState->flock;
-	send.id = ID_SEND_BOID;
 
-	//Send boids to the server
-	for(int i = 0; i < demoFlock.GetPositionIndex(); i++){
-		if(demoFlock.checkLocalBoid(i)){
-			send.position = demoFlock.getBoidPosition(i);
-			send.boidId = i;
-			demoState->peer->Send((char*)&send, sizeof(BoidStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->profile.address, false);
-		}
-	}
-}
 
-//Inital transfer of all boids to other clients
-void c3SendBoidToClient(c3_DemoState* demoState)
-{
-	if(demoState->clientProfiles.iter <= 0) return;
-	BoidStruct send;
-
-	Flock demoFlock = demoState->flock;
-	send.id = ID_SEND_BOID;
-
-	//Send boids to the clients
-	for (int i = 0; i < demoFlock.GetPositionIndex(); i++){
-		if(demoFlock.checkLocalBoid(i)){
-			send.position = demoFlock.getBoidPosition(i);
-			send.boidId = i;
-
-			for (int j = 0; j < demoState->clientProfiles.iter; j++)
-			{
-				demoState->peer->Send((char*)& send, sizeof(BoidStruct), HIGH_PRIORITY, RELIABLE_ORDERED, 0, demoState->clientProfiles.profiles[j].address, false);
-			}
-
-		}
-	}
-}

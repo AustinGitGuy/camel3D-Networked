@@ -73,7 +73,10 @@ struct EventStruct {
 #pragma pack(push, 1)
 struct BoidStruct {
 	unsigned char id;
+	RakNet::Time timeStamp;
 	Vector3 position;
+	Vector3 velocity;
+	Vector3 acceleration;
 	int boidId;
 };
 #pragma pack(pop)
