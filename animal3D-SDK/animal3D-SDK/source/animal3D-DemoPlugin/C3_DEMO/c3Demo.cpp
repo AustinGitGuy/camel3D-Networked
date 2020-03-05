@@ -314,7 +314,7 @@ void c3demoRender(c3_DemoState* demoState){
 			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: %s", demoState->str);
 		}
 		else {
-			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server mode, 1 for push, 2 for shared, 3 for coupled: %s", demoState->str);
+			//a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server mode, 1 for push, 2 for shared, 3 for coupled: %s", demoState->str);
 		}
 	}
 	else if(demoState->lobbyStage == 4){
@@ -324,17 +324,25 @@ void c3demoRender(c3_DemoState* demoState){
 	}
 }
 
+
+
+
+//Handles the Networking Lobby
+//Lobby State 0 = Client or Host or Local.  Lobby State 1 = Client IP.  Lobby State 2 = 
 void c3demoNetworkingLobby(c3_DemoState* demoState){
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	if(demoState->lobbyStage == -1){
 		printf("Lobby called when it shouldn't have!\n");
 	}
-	else if(demoState->lobbyStage == 0){
+	else if(demoState->lobbyStage == 0){// Draws Start Menu 
+		printf("Stage 0\n");
 		a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "C to connect, H to host, Q to quit, L to locally simulate: %s", demoState->str);
 		return;
+		//How does this exit?????
 	}
 	else if(demoState->lobbyStage == 1){
+		printf("Stage 1\n");
 		if((demoState->str[0] == 'c') || (demoState->str[0] == 'C')){
 			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: ");
 			RakNet::SocketDescriptor sd;
@@ -348,7 +356,7 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 			return;
 		}
 		else if((demoState->str[0] == 'h') || (demoState->str[0] == 'H')){
-			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server mode, 1 for push, 2 for shared, 3 for coupled: %s", demoState->str);
+			//a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server mode, 1 for push, 2 for shared, 3 for coupled: %s", demoState->str);
 			demoState->isServer = true;
 			demoState->lobbyStage++;
 		}
@@ -370,15 +378,17 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 		}
 	}
 	else if(demoState->lobbyStage == 2){
+		printf("Stage 2\n");
 		if(!demoState->isServer){
 			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server IP or hit enter for 127.0.0.1: %s", demoState->str);
 		}
-		else {
-			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server mode, 1 for push, 2 for shared, 3 for coupled: %s", demoState->str);
-		}
+		//else {
+		//	a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter server mode, 1 for push, 2 for shared, 3 for coupled: %s", demoState->str);
+		//}
 		return;
 	}
 	else if(demoState->lobbyStage == 3){
+		printf("Stage 3\n");
 		if(!demoState->isServer){
 			//If client: get the ip and the username, then start the client
 			if(demoState->index == 0){
@@ -391,15 +401,9 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 			demoState->lobbyStage++;
 		}
 		else {
-			if(demoState->str[0] == '1'){
-				demoState->serverType = ServerType::DATA_PUSH;
-			}
-			if (demoState->str[0] == '2') {
-				demoState->serverType = ServerType::DATA_SHARED;
-			}
-			if (demoState->str[0] == '3') {
-				demoState->serverType = ServerType::DATA_COUPLED;
-			}
+			
+			demoState->serverType = ServerType::DATA_COUPLED;
+			
 
 			if(demoState->serverType != ServerType::DATA_PUSH){
 				//Create the local flock
@@ -432,12 +436,14 @@ void c3demoNetworkingLobby(c3_DemoState* demoState){
 		}
 	}
 	else if(demoState->lobbyStage == 4){
+		printf("Stage 4\n");
 		if(!demoState->isServer){
-			a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter your user name: %s", demoState->str);
+			//a3textDraw(demoState->text, -1, -.95, -1, 1, 1, 1, 1, "Enter your user name: %s", demoState->str);
 		}
 		return;
 	}
 	else if(demoState->lobbyStage == 5){
+	printf("Stage 5\n");
 		if(!demoState->isServer){
 			if(demoState->index == 0){
 				strcpy(demoState->str, "Blank");
