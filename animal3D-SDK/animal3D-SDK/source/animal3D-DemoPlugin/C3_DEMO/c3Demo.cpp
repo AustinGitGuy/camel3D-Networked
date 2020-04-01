@@ -323,10 +323,10 @@ void c3demoNetworkingRecieve(c3_DemoState* demoState) {
 						//Calc latency
 						float latency = RakNet::GetTimeMS() - read->timeStamp;
 
-						printf("LAtency val: %f\n", latency);
+						printf("Latency val: %f\n", latency);
 
 						//Lerp position
-						//demoState->flock.setBoidPosition(read->boidId, Lerp(demoState->flock.getBoidPosition(read->boidId), read->position, latency));
+						demoState->flock.setBoidPosition(read->boidId, Lerp(demoState->flock.getBoidPosition(read->boidId), read->position, latency));
 
 					}
 				}
